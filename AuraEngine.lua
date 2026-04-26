@@ -32,7 +32,7 @@ function AuraEngine:ResolveTalents(trackerList)
             end
         end
         if def.hasteScales then
-            local haste = (UnitHaste and UnitHaste("player")) or 0
+            local haste = (GetHaste and GetHaste()) or 0
             def.duration = def.duration / (1 + haste / 100)
         end
     end

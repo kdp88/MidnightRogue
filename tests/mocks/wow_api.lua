@@ -127,7 +127,7 @@ end
 _G.GetSpecialization = function() return 3 end  -- default: Subtlety
 
 -- Haste (percentage, e.g. 19.0 = 19%)
-_G.UnitHaste = function(unit) return 0 end
+_G.GetHaste = function() return 0 end
 
 -- Shared globals the addon references
 _G.math  = math
