@@ -144,6 +144,57 @@ function TestAuraEngineTalents:test_duration_add_both_talents_stack()
     lu.assertEquals(54, list[1].duration)  -- base 42 + 6 + 6
 end
 
+function TestAuraEngineTalents:test_haste_scales_duration_no_talents()
+    _G.IsPlayerSpell = function(id) return false end
+    _G.UnitHaste = function() return 19.0 end
+    local list = {
+        {
+            id = "secret_technique", name = "Secret Technique", spellID = 280719, castID = 280719,
+            duration = 25, hasteScales = true,
+            talents = { { spellID = 441274, durationMult = 0.90 } },
+            group = "cooldowns", auraType = "player_buff",
+            priority = 91, color = { r=0.4, g=0, b=0.9, a=1 },
+        }
+    }
+    MR.AuraEngine:ResolveTalents(list)
+    -- 25 / 1.19 = 21.008...
+    lu.assertAlmostEquals(25 / 1.19, list[1].duration, 0.01)
+    _G.UnitHaste = function() return 0 end
+end
+
+function TestAuraEngineTalents:test_haste_scales_after_talent_mult()
+    _G.IsPlayerSpell = function(id) return id == 441274 end
+    _G.UnitHaste = function() return 19.0 end
+    local list = {
+        {
+            id = "secret_technique", name = "Secret Technique", spellID = 280719, castID = 280719,
+            duration = 25, hasteScales = true,
+            talents = { { spellID = 441274, durationMult = 0.90 } },
+            group = "cooldowns", auraType = "player_buff",
+            priority = 91, color = { r=0.4, g=0, b=0.9, a=1 },
+        }
+    }
+    MR.AuraEngine:ResolveTalents(list)
+    -- 25 * 0.90 / 1.19 = 22.5 / 1.19 ≈ 18.908
+    lu.assertAlmostEquals(22.5 / 1.19, list[1].duration, 0.01)
+    _G.UnitHaste = function() return 0 end
+end
+
+function TestAuraEngineTalents:test_haste_scales_zero_haste_unchanged()
+    _G.IsPlayerSpell = function(id) return false end
+    _G.UnitHaste = function() return 0 end
+    local list = {
+        {
+            id = "secret_technique", name = "Secret Technique", spellID = 280719, castID = 280719,
+            duration = 25, hasteScales = true, talents = {},
+            group = "cooldowns", auraType = "player_buff",
+            priority = 91, color = { r=0.4, g=0, b=0.9, a=1 },
+        }
+    }
+    MR.AuraEngine:ResolveTalents(list)
+    lu.assertAlmostEquals(25.0, list[1].duration, 0.01)
+end
+
 function TestAuraEngineTalents:test_no_talents_field_is_safe()
     _G.IsPlayerSpell = function(id) return false end
     local list = {

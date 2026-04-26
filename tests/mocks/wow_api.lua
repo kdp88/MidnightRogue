@@ -126,6 +126,9 @@ end
 -- Spec detection
 _G.GetSpecialization = function() return 3 end  -- default: Subtlety
 
+-- Haste (percentage, e.g. 19.0 = 19%)
+_G.UnitHaste = function(unit) return 0 end
+
 -- Shared globals the addon references
 _G.math  = math
 _G.table = table

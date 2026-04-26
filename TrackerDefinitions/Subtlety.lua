@@ -63,6 +63,24 @@ MR.Trackers["Subtlety"] = {
     -- MAJOR COOLDOWNS
     -- =========================================================
     {
+        id          = "secret_technique",
+        name        = "Secret Technique",
+        spellID     = 280719,
+        castID      = 280719,
+        duration    = 25,      -- base cooldown; haste-scaled at load time
+        hasteScales = true,
+        talents     = {
+            { spellID = 441274, durationMult = 0.90 },  -- Disorienting Strikes: -10% CD
+        },
+        auraType     = "player_buff",
+        group        = "cooldowns",
+        priority     = 91,
+        color        = { r = 0.4, g = 0.0, b = 0.9, a = 1.0 },
+        showDuration = true,
+        showStacks   = false,
+        flashBelow   = 3,
+    },
+    {
         id       = "sprint",
         name     = "Sprint",
         spellID  = 2983,
