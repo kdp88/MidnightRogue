@@ -17,6 +17,21 @@ AuraEngine.state = {}
 -- Built at load time by BuildCastMap() — maps castID -> trackerDef
 AuraEngine._castMap = {}
 
+-- Called once at init. Checks IsPlayerSpell for each talent modifier and
+-- overwrites duration/cooldown on the def in-place.
+function AuraEngine:ResolveTalents(trackerList)
+    for _, def in ipairs(trackerList) do
+        if def.talents then
+            for _, mod in ipairs(def.talents) do
+                if IsPlayerSpell(mod.spellID) then
+                    if mod.duration then def.duration = mod.duration end
+                    if mod.cooldown then def.cooldown = mod.cooldown end
+                end
+            end
+        end
+    end
+end
+
 -- Called by Core.lua after the active tracker is loaded
 function AuraEngine:BuildCastMap(trackerList)
     self._castMap = {}

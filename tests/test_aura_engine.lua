@@ -54,6 +54,74 @@ local function make_tracker_list()
     }
 end
 
+-- ─── ResolveTalents ──────────────────────────────────────────────────────────
+
+TestAuraEngineTalents = {}
+
+function TestAuraEngineTalents:setUp()
+    MR.AuraEngine:Reset()
+end
+
+function TestAuraEngineTalents:test_talent_overrides_cooldown_when_learned()
+    _G.IsPlayerSpell = function(id) return id == 231691 end
+    local list = {
+        {
+            id = "sprint", name = "Sprint", spellID = 2983, castID = 2983,
+            duration = 12, cooldown = 120,
+            talents = { { spellID = 231691, cooldown = 60 } },
+            group = "cooldowns", auraType = "player_buff",
+            priority = 85, color = { r=0.8, g=0.8, b=0, a=1 },
+        }
+    }
+    MR.AuraEngine:ResolveTalents(list)
+    lu.assertEquals(60, list[1].cooldown)
+    lu.assertEquals(12, list[1].duration)  -- duration unchanged
+end
+
+function TestAuraEngineTalents:test_talent_does_not_override_when_not_learned()
+    _G.IsPlayerSpell = function(id) return false end
+    local list = {
+        {
+            id = "sprint", name = "Sprint", spellID = 2983, castID = 2983,
+            duration = 12, cooldown = 120,
+            talents = { { spellID = 231691, cooldown = 60 } },
+            group = "cooldowns", auraType = "player_buff",
+            priority = 85, color = { r=0.8, g=0.8, b=0, a=1 },
+        }
+    }
+    MR.AuraEngine:ResolveTalents(list)
+    lu.assertEquals(120, list[1].cooldown)
+end
+
+function TestAuraEngineTalents:test_talent_overrides_duration_when_learned()
+    _G.IsPlayerSpell = function(id) return id == 99999 end
+    local list = {
+        {
+            id = "test", name = "Test", spellID = 111, castID = 111,
+            duration = 8, cooldown = 30,
+            talents = { { spellID = 99999, duration = 12 } },
+            group = "cooldowns", auraType = "player_buff",
+            priority = 50, color = { r=1, g=0, b=0, a=1 },
+        }
+    }
+    MR.AuraEngine:ResolveTalents(list)
+    lu.assertEquals(12, list[1].duration)
+end
+
+function TestAuraEngineTalents:test_no_talents_field_is_safe()
+    _G.IsPlayerSpell = function(id) return false end
+    local list = {
+        {
+            id = "test", name = "Test", spellID = 111, castID = 111,
+            duration = 8, group = "cooldowns", auraType = "player_buff",
+            priority = 50, color = { r=1, g=0, b=0, a=1 },
+        }
+    }
+    -- should not error
+    MR.AuraEngine:ResolveTalents(list)
+    lu.assertEquals(8, list[1].duration)
+end
+
 TestAuraEngineCastMap = {}
 
 function TestAuraEngineCastMap:setUp()

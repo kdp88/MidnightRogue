@@ -63,6 +63,37 @@ MR.Trackers["Subtlety"] = {
     -- MAJOR COOLDOWNS
     -- =========================================================
     {
+        id       = "sprint",
+        name     = "Sprint",
+        spellID  = 2983,
+        castID   = 2983,
+        duration = 12,
+        cooldown = 120,
+        talents  = {
+            { spellID = 231691, cooldown = 60 },  -- Improved Sprint
+        },
+        auraType = "player_buff",
+        group    = "cooldowns",
+        priority = 85,
+        color    = { r = 0.8, g = 0.8, b = 0.0, a = 1.0 },
+        showDuration = true,
+        showStacks   = false,
+    },
+    {
+        id       = "crimson_vial",
+        name     = "Crimson Vial",
+        spellID  = 185311,
+        castID   = 185311,
+        duration = 4,
+        auraType = "player_buff",
+        group    = "cooldowns",
+        priority = 86,
+        color    = { r = 0.9, g = 0.1, b = 0.1, a = 1.0 },
+        showDuration = true,
+        showStacks   = false,
+        flashBelow   = 2,
+    },
+    {
         id       = "slice_and_dice",
         name     = "Slice and Dice",
         spellID  = 315496,

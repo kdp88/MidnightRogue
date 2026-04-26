@@ -35,6 +35,7 @@ function addon:OnInitialize()
     end
 
     if activeTracker then
+        MR.AuraEngine:ResolveTalents(activeTracker)
         MR.AuraEngine:BuildCastMap(activeTracker)
         local groupsCfg = MR.db.profile.groups
         for groupName, settings in pairs(groupsCfg) do
