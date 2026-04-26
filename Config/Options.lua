@@ -161,14 +161,12 @@ function Options:Build(trackerList)
                         end,
                     },
                     currentSpec = {
-                        name     = "Active Spec Profile",
+                        name     = function()
+                            return "Profile: " .. MR.Profiles:GetCurrentProfileName() .. " (reload to change)"
+                        end,
                         type     = "description",
                         order    = 2,
                         fontSize = "medium",
-                        image    = "",
-                        get      = function()
-                            return "Profile: " .. MR.Profiles:GetCurrentProfileName() .. " (reload to change)"
-                        end,
                     },
                 },
             },

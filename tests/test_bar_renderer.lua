@@ -63,6 +63,31 @@ function TestBarRendererPool:test_release_clears_tracker_id()
     lu.assertNil(bar.trackerID)
 end
 
+function TestBarRendererPool:test_release_clears_expired_flag()
+    -- Regression: expired=true on a pooled bar caused it to be immediately
+    -- released again on first OnUpdate tick after reuse.
+    local bar = MR.BarRenderer:AcquireBar(CreateFrame("Frame"))
+    bar.expired = true
+    MR.BarRenderer:ReleaseBar(bar)
+    lu.assertNil(bar.expired)
+end
+
+function TestBarRendererPool:test_release_clears_flashing_flag()
+    local bar = MR.BarRenderer:AcquireBar(CreateFrame("Frame"))
+    bar._flashing = true
+    MR.BarRenderer:ReleaseBar(bar)
+    lu.assertNil(bar._flashing)
+end
+
+function TestBarRendererPool:test_reused_bar_does_not_start_expired()
+    local parent = CreateFrame("Frame")
+    local bar = MR.BarRenderer:AcquireBar(parent)
+    bar.expired = true
+    MR.BarRenderer:ReleaseBar(bar)
+    local bar2 = MR.BarRenderer:AcquireBar(parent)
+    lu.assertNil(bar2.expired)
+end
+
 -- ─── ConfigureBar ─────────────────────────────────────────────────────────────
 
 TestBarRendererConfigure = {}
@@ -89,6 +114,14 @@ function TestBarRendererConfigure:test_stores_duration_data_on_bar()
     lu.assertEquals("test_buff", bar.trackerID)
     lu.assertEquals(10.0,        bar.duration)
     lu.assertEquals(1010.0,      bar.endTime)
+end
+
+function TestBarRendererConfigure:test_zero_expiration_sets_nil_end_time()
+    -- Permanent auras (expirationTime=0) must result in nil endTime so
+    -- UpdateBar does not immediately mark the bar as expired.
+    local bar = MR.BarRenderer:AcquireBar(CreateFrame("Frame"))
+    MR.BarRenderer:ConfigureBar(bar, make_tracker(), make_aura({duration=0, expirationTime=0}), nil)
+    lu.assertNil(bar.endTime)
 end
 
 function TestBarRendererConfigure:test_shows_stacks_when_stacks_gt_1()

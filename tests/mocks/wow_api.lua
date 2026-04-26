@@ -111,12 +111,6 @@ end
 
 _G.UIParent = MockFrame()
 
--- C_UnitAuras stubs — override per-test for specific scenarios
-_G.C_UnitAuras = {
-    GetPlayerAuraBySpellID = function(spellID) return nil end,
-    GetAuraDataBySpellID   = function(unit, spellID, isHelpful) return nil end,
-}
-
 -- C_Spell stubs
 _G.C_Spell = {
     GetSpellInfo = function(spellID)

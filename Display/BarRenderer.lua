@@ -83,6 +83,8 @@ function BarRenderer:ReleaseBar(bar)
     bar.endTime    = nil
     bar.duration   = nil
     bar.flashBelow = nil
+    bar.expired    = nil
+    bar._flashing  = nil
     table.insert(barPool, bar)
 end
 
@@ -136,10 +138,11 @@ function BarRenderer:ConfigureBar(bar, trackerDef, auraData, settings)
     end
 
     -- Duration tracking data stored on the bar for OnUpdate
+    -- endTime=nil means no expiry (permanent until cleared by game state)
     bar.trackerID  = trackerDef.id
     bar.duration   = auraData.duration
-    bar.endTime    = auraData.expirationTime
-    bar.startTime  = auraData.expirationTime - auraData.duration
+    bar.endTime    = (auraData.expirationTime and auraData.expirationTime > 0) and auraData.expirationTime or nil
+    bar.startTime  = bar.endTime and (bar.endTime - auraData.duration) or nil
     bar.flashBelow = trackerDef.flashBelow or cfg.flashBelow
     bar.showDuration = trackerDef.showDuration
 

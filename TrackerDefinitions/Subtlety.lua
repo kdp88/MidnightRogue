@@ -1,26 +1,16 @@
 --[[
     TrackerDefinitions/Subtlety.lua
-    All tracked auras, debuffs, and cooldown buffs for Subtlety Rogue.
 
-    IMPORTANT: Every spell ID here is from Dragonflight (11.x).
-    VERIFY ALL IDs against Midnight live/PTR before shipping.
-    Use: /script print(C_Spell.GetSpellInfo(SPELL_ID).name) in-game to verify.
+    castID: the spell ID that appears in UNIT_SPELLCAST_SUCCEEDED (the ability you press).
+            Omit if the same as spellID.
+    duration: aura duration in seconds. 0 = no expiry (e.g. Stealth — cleared by other means).
+              For combo-point-scaled abilities (Rupture) this is the max duration at 6 CP.
 
-    auraType:
-      "player_buff"   -- buff on the player (C_UnitAuras.GetPlayerAuraBySpellID)
-      "target_debuff" -- debuff on target cast by player
-      "focus_debuff"  -- debuff on focus cast by player
-
-    group:
-      Which bar group this tracker belongs to. Groups are defined in Config/Defaults.lua.
-      "stealth"   -- stealth-state indicators
-      "cooldowns" -- major cooldowns
-      "procs"     -- short-window procs that need immediate attention
-      "dots"      -- damage over time on target
-      "debuffs"   -- non-dot debuffs on target
+    IMPORTANT: All spell IDs and durations are from Dragonflight (11.x).
+    VERIFY ALL against Midnight live/PTR before shipping.
 --]]
 
-MR = MR or {}
+local addonName, MR = ...
 MR.Trackers = MR.Trackers or {}
 
 MR.Trackers["Subtlety"] = {
@@ -29,20 +19,11 @@ MR.Trackers["Subtlety"] = {
     -- STEALTH STATES
     -- =========================================================
     {
-        id       = "stealth",
-        name     = "Stealth",
-        spellID  = 1784,       -- VERIFY for Midnight
-        auraType = "player_buff",
-        group    = "stealth",
-        priority = 100,
-        color    = { r = 0.4, g = 0.4, b = 0.8, a = 1.0 },
-        showDuration = false,
-        showStacks   = false,
-    },
-    {
         id       = "vanish",
         name     = "Vanish",
-        spellID  = 11327,      -- VERIFY: this is the Vanish *buff* ID, not the ability (1856)
+        spellID  = 11327,
+        castID   = 1856,       -- 1856 = Vanish ability; 11327 = the buff it applies
+        duration = 3,
         auraType = "player_buff",
         group    = "stealth",
         priority = 99,
@@ -53,7 +34,9 @@ MR.Trackers["Subtlety"] = {
     {
         id       = "shadow_dance",
         name     = "Shadow Dance",
-        spellID  = 185422,     -- VERIFY for Midnight
+        spellID  = 185422,
+        castID   = 185313,     -- 185313 = Shadow Dance ability; 185422 = the buff
+        duration = 8,
         auraType = "player_buff",
         group    = "stealth",
         priority = 98,
@@ -64,14 +47,16 @@ MR.Trackers["Subtlety"] = {
     {
         id       = "subterfuge",
         name     = "Subterfuge",
-        spellID  = 115192,     -- VERIFY: talent proc, may not exist in Midnight
+        spellID  = 115192,
+        castID   = 115192,
+        duration = 3,
         auraType = "player_buff",
         group    = "stealth",
         priority = 97,
         color    = { r = 0.6, g = 0.2, b = 0.9, a = 1.0 },
         showDuration = true,
         showStacks   = false,
-        optional     = true,   -- talent-gated, hidden by default if not talented
+        optional     = true,
     },
 
     -- =========================================================
@@ -80,7 +65,9 @@ MR.Trackers["Subtlety"] = {
     {
         id       = "symbols_of_death",
         name     = "Symbols of Death",
-        spellID  = 212283,     -- VERIFY for Midnight
+        spellID  = 212283,
+        castID   = 212283,
+        duration = 35,
         auraType = "player_buff",
         group    = "cooldowns",
         priority = 90,
@@ -91,7 +78,9 @@ MR.Trackers["Subtlety"] = {
     {
         id       = "shadow_blades",
         name     = "Shadow Blades",
-        spellID  = 121471,     -- VERIFY for Midnight
+        spellID  = 121471,
+        castID   = 121471,
+        duration = 20,
         auraType = "player_buff",
         group    = "cooldowns",
         priority = 89,
@@ -102,23 +91,27 @@ MR.Trackers["Subtlety"] = {
     {
         id       = "flagellation_buff",
         name     = "Flagellation",
-        spellID  = 384631,     -- VERIFY: this is the player haste buff from Flagellation in Dragonflight
+        spellID  = 384631,
+        castID   = 323654,     -- cast ID is the Flagellation ability
+        duration = 12,
         auraType = "player_buff",
         group    = "cooldowns",
         priority = 88,
         color    = { r = 0.9, g = 0.5, b = 0.1, a = 1.0 },
         showDuration = true,
-        showStacks   = true,   -- stacks up to 30
-        optional     = true,   -- talent-gated
+        showStacks   = true,
+        optional     = true,
     },
 
     -- =========================================================
-    -- PROCS (short window, high priority)
+    -- PROCS
     -- =========================================================
     {
         id       = "premeditation",
         name     = "Premeditation",
-        spellID  = 343160,     -- VERIFY for Midnight
+        spellID  = 343160,
+        castID   = 343160,
+        duration = 15,
         auraType = "player_buff",
         group    = "procs",
         priority = 80,
@@ -131,7 +124,9 @@ MR.Trackers["Subtlety"] = {
     {
         id       = "the_rotten",
         name     = "The Rotten",
-        spellID  = 376888,     -- VERIFY for Midnight
+        spellID  = 376888,
+        castID   = 376888,
+        duration = 8,
         auraType = "player_buff",
         group    = "procs",
         priority = 79,
@@ -144,36 +139,27 @@ MR.Trackers["Subtlety"] = {
     {
         id       = "danse_macabre",
         name     = "Danse Macabre",
-        spellID  = 382105,     -- VERIFY for Midnight
+        spellID  = 382105,
+        castID   = 382105,
+        duration = 8,
         auraType = "player_buff",
         group    = "procs",
         priority = 78,
         color    = { r = 0.7, g = 0.0, b = 0.9, a = 1.0 },
         showDuration = true,
-        showStacks   = true,   -- stacks with each unique ability used in Shadow Dance
+        showStacks   = true,
         flashBelow   = 3,
         optional     = true,
     },
-    {
-        id       = "secret_technique_buff",
-        name     = "Secret Technique",
-        spellID  = 280719,     -- VERIFY for Midnight — this may be the ability not the buff
-        auraType = "player_buff",
-        group    = "procs",
-        priority = 77,
-        color    = { r = 0.3, g = 0.8, b = 0.8, a = 1.0 },
-        showDuration = true,
-        showStacks   = false,
-        optional     = true,
-    },
-
     -- =========================================================
     -- DOTS ON TARGET
     -- =========================================================
     {
         id       = "rupture",
         name     = "Rupture",
-        spellID  = 1943,       -- VERIFY for Midnight
+        spellID  = 1943,
+        castID   = 1943,
+        duration = 24,         -- max duration at 6 combo points
         auraType = "target_debuff",
         group    = "dots",
         priority = 70,
@@ -189,7 +175,9 @@ MR.Trackers["Subtlety"] = {
     {
         id       = "find_weakness",
         name     = "Find Weakness",
-        spellID  = 91021,      -- VERIFY for Midnight — applied by Cheap Shot / Ambush from stealth
+        spellID  = 91021,
+        castID   = 91021,
+        duration = 10,
         auraType = "target_debuff",
         group    = "debuffs",
         priority = 60,
@@ -200,7 +188,9 @@ MR.Trackers["Subtlety"] = {
     {
         id       = "echoing_reprimand",
         name     = "Echoing Reprimand",
-        spellID  = 323547,     -- VERIFY for Midnight — debuff on target that procs combo points
+        spellID  = 323547,
+        castID   = 323547,
+        duration = 15,
         auraType = "target_debuff",
         group    = "debuffs",
         priority = 59,
@@ -212,7 +202,9 @@ MR.Trackers["Subtlety"] = {
     {
         id       = "flagellation_debuff",
         name     = "Flagellation (Debuff)",
-        spellID  = 323654,     -- VERIFY for Midnight — the debuff on target
+        spellID  = 323654,
+        castID   = 323654,
+        duration = 12,
         auraType = "target_debuff",
         group    = "debuffs",
         priority = 58,

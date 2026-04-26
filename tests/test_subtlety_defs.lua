@@ -25,11 +25,26 @@ function TestSubtletyDefs:test_unique_ids()
 end
 
 function TestSubtletyDefs:test_required_fields_present()
-    local required = { "id", "name", "spellID", "auraType", "group", "priority", "color" }
+    local required = { "id", "name", "spellID", "castID", "duration", "auraType", "group", "priority", "color" }
     for _, def in ipairs(self.defs) do
         for _, field in ipairs(required) do
             lu.assertNotNil(def[field], def.id .. " missing field: " .. field)
         end
+    end
+end
+
+function TestSubtletyDefs:test_cast_ids_are_positive_integers()
+    for _, def in ipairs(self.defs) do
+        lu.assertIsNumber(def.castID, def.id .. " castID must be a number")
+        lu.assertTrue(def.castID > 0, def.id .. " castID must be > 0")
+        lu.assertEquals(math.floor(def.castID), def.castID, def.id .. " castID must be integer")
+    end
+end
+
+function TestSubtletyDefs:test_durations_are_non_negative()
+    for _, def in ipairs(self.defs) do
+        lu.assertIsNumber(def.duration, def.id .. " duration must be a number")
+        lu.assertTrue(def.duration >= 0, def.id .. " duration must be >= 0")
     end
 end
 
