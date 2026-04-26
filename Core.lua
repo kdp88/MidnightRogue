@@ -81,10 +81,12 @@ function addon:UNIT_SPELLCAST_SUCCEEDED(_, unitID, _, spellID)
 end
 
 function addon:PLAYER_TARGET_CHANGED()
+    MR.AuraEngine:ClearUnitDebuffs("target_debuff")
     MR:RefreshDisplay()
 end
 
 function addon:PLAYER_FOCUS_CHANGED()
+    MR.AuraEngine:ClearUnitDebuffs("focus_debuff")
     MR:RefreshDisplay()
 end
 

@@ -90,6 +90,16 @@ function AuraEngine:Reset()
     self.state = {}
 end
 
+-- Clear debuffs of a given auraType (on target/focus change)
+function AuraEngine:ClearUnitDebuffs(auraType)
+    for spellID in pairs(self.state) do
+        local def = self:GetDefBySpellID(spellID)
+        if def and def.auraType == auraType then
+            self.state[spellID] = nil
+        end
+    end
+end
+
 -- Clear only stealth-state auras (on PLAYER_REGEN_DISABLED — entered combat)
 function AuraEngine:ClearStealthOnCombat()
     for spellID, data in pairs(self.state) do

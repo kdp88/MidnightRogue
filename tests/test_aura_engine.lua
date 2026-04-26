@@ -476,4 +476,31 @@ function TestAuraEngineReset:test_clear_stealth_keeps_non_stealth_auras()
     lu.assertNotNil(MR.AuraEngine.state[1943])
 end
 
+-- ─── ClearUnitDebuffs ────────────────────────────────────────────────────────
+
+TestAuraEngineClearUnitDebuffs = {}
+
+function TestAuraEngineClearUnitDebuffs:setUp()
+    MR.AuraEngine:Reset()
+    MR.AuraEngine:BuildCastMap(make_tracker_list())
+end
+
+function TestAuraEngineClearUnitDebuffs:test_clears_target_debuffs()
+    MR.AuraEngine:OnSpellCast(1943)   -- rupture: target_debuff
+    MR.AuraEngine:ClearUnitDebuffs("target_debuff")
+    lu.assertNil(MR.AuraEngine.state[1943])
+end
+
+function TestAuraEngineClearUnitDebuffs:test_keeps_player_buffs()
+    MR.AuraEngine:OnSpellCast(212283)  -- symbols_of_death: player_buff
+    MR.AuraEngine:ClearUnitDebuffs("target_debuff")
+    lu.assertNotNil(MR.AuraEngine.state[212283])
+end
+
+function TestAuraEngineClearUnitDebuffs:test_focus_debuff_does_not_clear_target_debuff()
+    MR.AuraEngine:OnSpellCast(1943)   -- rupture: target_debuff
+    MR.AuraEngine:ClearUnitDebuffs("focus_debuff")
+    lu.assertNotNil(MR.AuraEngine.state[1943])
+end
+
 -- Runner calls lu.LuaUnit.run() — do not call os.exit here
