@@ -21,6 +21,12 @@ AuraEngine._castMap = {}
 -- overwrites duration/cooldown on the def in-place.
 function AuraEngine:ResolveTalents(trackerList)
     for _, def in ipairs(trackerList) do
+        -- snapshot base values on first call so re-runs don't compound
+        if def._baseDuration == nil then def._baseDuration = def.duration end
+        if def._baseCooldown == nil then def._baseCooldown = def.cooldown end
+        def.duration = def._baseDuration
+        def.cooldown = def._baseCooldown
+
         if def.talents then
             for _, mod in ipairs(def.talents) do
                 if IsPlayerSpell(mod.spellID) then

@@ -60,6 +60,7 @@ TestAuraEngineTalents = {}
 
 function TestAuraEngineTalents:setUp()
     MR.AuraEngine:Reset()
+    _G.GetHaste = function() return 0 end
 end
 
 function TestAuraEngineTalents:test_talent_overrides_cooldown_when_learned()
@@ -193,6 +194,42 @@ function TestAuraEngineTalents:test_haste_scales_zero_haste_unchanged()
     }
     MR.AuraEngine:ResolveTalents(list)
     lu.assertAlmostEquals(25.0, list[1].duration, 0.01)
+end
+
+function TestAuraEngineTalents:test_repeated_resolve_does_not_compound_duration_add()
+    _G.IsPlayerSpell = function(id) return id == 193531 end
+    _G.GetHaste = function() return 0 end
+    local list = {
+        {
+            id = "slice_and_dice", name = "Slice and Dice", spellID = 315496, castID = 315496,
+            duration = 42,
+            talents = { { spellID = 193531, durationAdd = 6 } },
+            group = "cooldowns", auraType = "player_buff",
+            priority = 87, color = { r=0, g=0.8, b=0.3, a=1 },
+        }
+    }
+    MR.AuraEngine:ResolveTalents(list)
+    MR.AuraEngine:ResolveTalents(list)
+    MR.AuraEngine:ResolveTalents(list)
+    lu.assertEquals(48, list[1].duration)  -- 42+6, not 42+6+6+6
+end
+
+function TestAuraEngineTalents:test_repeated_resolve_does_not_compound_haste()
+    _G.IsPlayerSpell = function(id) return id == 441274 end
+    _G.GetHaste = function() return 19.0 end
+    local list = {
+        {
+            id = "secret_technique", name = "Secret Technique", spellID = 280719, castID = 280719,
+            duration = 25, hasteScales = true,
+            talents = { { spellID = 441274, durationMult = 0.90 } },
+            group = "cooldowns", auraType = "player_buff",
+            priority = 91, color = { r=0.4, g=0, b=0.9, a=1 },
+        }
+    }
+    MR.AuraEngine:ResolveTalents(list)
+    MR.AuraEngine:ResolveTalents(list)
+    MR.AuraEngine:ResolveTalents(list)
+    lu.assertAlmostEquals(22.5 / 1.19, list[1].duration, 0.01)  -- not compounded
 end
 
 function TestAuraEngineTalents:test_no_talents_field_is_safe()
