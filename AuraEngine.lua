@@ -24,8 +24,9 @@ function AuraEngine:ResolveTalents(trackerList)
         if def.talents then
             for _, mod in ipairs(def.talents) do
                 if IsPlayerSpell(mod.spellID) then
-                    if mod.duration then def.duration = mod.duration end
-                    if mod.cooldown then def.cooldown = mod.cooldown end
+                    if mod.duration    then def.duration = mod.duration end
+                    if mod.durationAdd then def.duration = def.duration + mod.durationAdd end
+                    if mod.cooldown    then def.cooldown = mod.cooldown end
                 end
             end
         end

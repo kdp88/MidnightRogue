@@ -108,6 +108,42 @@ function TestAuraEngineTalents:test_talent_overrides_duration_when_learned()
     lu.assertEquals(12, list[1].duration)
 end
 
+function TestAuraEngineTalents:test_duration_add_increments_duration()
+    _G.IsPlayerSpell = function(id) return id == 193531 end
+    local list = {
+        {
+            id = "slice_and_dice", name = "Slice and Dice", spellID = 315496, castID = 315496,
+            duration = 42,
+            talents = {
+                { spellID = 193531, durationAdd = 6 },
+                { spellID = 394320, durationAdd = 6 },
+            },
+            group = "cooldowns", auraType = "player_buff",
+            priority = 87, color = { r=0, g=0.8, b=0.3, a=1 },
+        }
+    }
+    MR.AuraEngine:ResolveTalents(list)
+    lu.assertEquals(48, list[1].duration)  -- base 42 + one talent's 6
+end
+
+function TestAuraEngineTalents:test_duration_add_both_talents_stack()
+    _G.IsPlayerSpell = function(id) return id == 193531 or id == 394320 end
+    local list = {
+        {
+            id = "slice_and_dice", name = "Slice and Dice", spellID = 315496, castID = 315496,
+            duration = 42,
+            talents = {
+                { spellID = 193531, durationAdd = 6 },
+                { spellID = 394320, durationAdd = 6 },
+            },
+            group = "cooldowns", auraType = "player_buff",
+            priority = 87, color = { r=0, g=0.8, b=0.3, a=1 },
+        }
+    }
+    MR.AuraEngine:ResolveTalents(list)
+    lu.assertEquals(54, list[1].duration)  -- base 42 + 6 + 6
+end
+
 function TestAuraEngineTalents:test_no_talents_field_is_safe()
     _G.IsPlayerSpell = function(id) return false end
     local list = {

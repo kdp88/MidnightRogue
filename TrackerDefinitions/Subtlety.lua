@@ -98,7 +98,11 @@ MR.Trackers["Subtlety"] = {
         name     = "Slice and Dice",
         spellID  = 315496,
         castID   = { 315496, 196819, 441776 },  -- direct cast, Eviscerate, Coup de Grace
-        duration = 48,         -- max at 6 CP: 12 + (6 * 6)
+        duration = 42,         -- base: 5 CP max = 12 + (5 * 6)
+        talents  = {
+            { spellID = 193531, durationAdd = 6 },  -- Deeper Stratagem: +1 CP
+            { spellID = 394320, durationAdd = 6 },  -- Secret Stratagem: +1 CP
+        },
         auraType = "player_buff",
         group    = "cooldowns",
         priority = 87,
