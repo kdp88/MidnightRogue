@@ -163,8 +163,10 @@ function addon:OnChatCommand(input)
         if count == 0 then self:Print("  (empty)") end
         self:Print("=== CastMap Keys ===")
         local mapCount = 0
-        for castID, def in pairs(MR.AuraEngine._castMap) do
-            self:Print(string.format("  castID=%d -> %s", castID, def.id))
+        for castID, defs in pairs(MR.AuraEngine._castMap) do
+            local names = {}
+            for _, def in ipairs(defs) do table.insert(names, def.id) end
+            self:Print(string.format("  castID=%d -> %s", castID, table.concat(names, ", ")))
             mapCount = mapCount + 1
         end
         if mapCount == 0 then self:Print("  (empty — BuildCastMap may not have run)") end

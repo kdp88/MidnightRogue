@@ -63,6 +63,20 @@ MR.Trackers["Subtlety"] = {
     -- MAJOR COOLDOWNS
     -- =========================================================
     {
+        id       = "slice_and_dice",
+        name     = "Slice and Dice",
+        spellID  = 315496,
+        castID   = { 315496, 196819, 441776 },  -- direct cast, Eviscerate, Coup de Grace
+        duration = 48,         -- max at 6 CP: 12 + (6 * 6)
+        auraType = "player_buff",
+        group    = "cooldowns",
+        priority = 87,
+        color    = { r = 0.0, g = 0.8, b = 0.3, a = 1.0 },
+        showDuration = true,
+        showStacks   = false,
+        flashBelow   = 5,
+    },
+    {
         id       = "symbols_of_death",
         name     = "Symbols of Death",
         spellID  = 212283,
@@ -173,10 +187,38 @@ MR.Trackers["Subtlety"] = {
     -- DEBUFFS ON TARGET
     -- =========================================================
     {
+        id       = "cheap_shot",
+        name     = "Cheap Shot",
+        spellID  = 1833,
+        castID   = 1833,
+        duration = 4,
+        auraType = "target_debuff",
+        group    = "debuffs",
+        priority = 62,
+        color    = { r = 1.0, g = 0.6, b = 0.0, a = 1.0 },
+        showDuration = true,
+        showStacks   = false,
+        flashBelow   = 2,
+    },
+    {
+        id       = "kidney_shot",
+        name     = "Kidney Shot",
+        spellID  = 408,
+        castID   = 408,
+        duration = 8,          -- max at 5 CP
+        auraType = "target_debuff",
+        group    = "debuffs",
+        priority = 61,
+        color    = { r = 1.0, g = 0.4, b = 0.0, a = 1.0 },
+        showDuration = true,
+        showStacks   = false,
+        flashBelow   = 2,
+    },
+    {
         id       = "find_weakness",
         name     = "Find Weakness",
         spellID  = 91021,
-        castID   = 91021,
+        castID   = { 1833, 185438 },  -- Cheap Shot, Shadowstrike (stealth-only, no shared IDs)
         duration = 10,
         auraType = "target_debuff",
         group    = "debuffs",

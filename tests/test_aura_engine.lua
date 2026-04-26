@@ -62,23 +62,76 @@ end
 
 function TestAuraEngineCastMap:test_build_cast_map_indexes_by_cast_id()
     MR.AuraEngine:BuildCastMap(make_tracker_list())
-    -- castID == spellID
     lu.assertNotNil(MR.AuraEngine._castMap[212283])
-    lu.assertEquals("symbols_of_death", MR.AuraEngine._castMap[212283].id)
+    lu.assertEquals("symbols_of_death", MR.AuraEngine._castMap[212283][1].id)
 end
 
 function TestAuraEngineCastMap:test_build_cast_map_uses_cast_id_not_spell_id()
     MR.AuraEngine:BuildCastMap(make_tracker_list())
-    -- Shadow Dance: castID=185313, spellID=185422
     lu.assertNotNil(MR.AuraEngine._castMap[185313])
     lu.assertNil(MR.AuraEngine._castMap[185422])
-    lu.assertEquals("shadow_dance", MR.AuraEngine._castMap[185313].id)
+    lu.assertEquals("shadow_dance", MR.AuraEngine._castMap[185313][1].id)
 end
 
 function TestAuraEngineCastMap:test_build_cast_map_replaces_previous_map()
     MR.AuraEngine:BuildCastMap(make_tracker_list())
     MR.AuraEngine:BuildCastMap({})
     lu.assertNil(MR.AuraEngine._castMap[212283])
+end
+
+function TestAuraEngineCastMap:test_build_cast_map_handles_array_cast_id()
+    local list = {
+        {
+            id = "find_weakness", name = "Find Weakness",
+            spellID = 91021, castID = { 1833, 8676 },
+            duration = 10, group = "debuffs", auraType = "target_debuff",
+            priority = 60, color = { r=0.5, g=0.5, b=0.5, a=1 },
+        }
+    }
+    MR.AuraEngine:BuildCastMap(list)
+    lu.assertNotNil(MR.AuraEngine._castMap[1833])
+    lu.assertNotNil(MR.AuraEngine._castMap[8676])
+    lu.assertEquals("find_weakness", MR.AuraEngine._castMap[1833][1].id)
+    lu.assertEquals("find_weakness", MR.AuraEngine._castMap[8676][1].id)
+end
+
+function TestAuraEngineCastMap:test_shared_cast_id_triggers_multiple_trackers()
+    -- Cheap Shot (1833) should trigger both cheap_shot and find_weakness
+    local list = {
+        {
+            id = "cheap_shot", name = "Cheap Shot",
+            spellID = 1833, castID = 1833,
+            duration = 4, group = "debuffs", auraType = "target_debuff",
+            priority = 62, color = { r=1, g=0.6, b=0, a=1 },
+        },
+        {
+            id = "find_weakness", name = "Find Weakness",
+            spellID = 91021, castID = { 1833, 8676 },
+            duration = 10, group = "debuffs", auraType = "target_debuff",
+            priority = 60, color = { r=0.5, g=0.5, b=0.5, a=1 },
+        }
+    }
+    MR.AuraEngine:Reset()
+    MR.AuraEngine:BuildCastMap(list)
+    MR.AuraEngine:OnSpellCast(1833)
+    lu.assertNotNil(MR.AuraEngine.state[1833],  "cheap_shot bar should appear")
+    lu.assertNotNil(MR.AuraEngine.state[91021], "find_weakness bar should appear")
+end
+
+function TestAuraEngineCastMap:test_array_cast_id_triggers_correct_spell_id()
+    local list = {
+        {
+            id = "find_weakness", name = "Find Weakness",
+            spellID = 91021, castID = { 1833, 8676 },
+            duration = 10, group = "debuffs", auraType = "target_debuff",
+            priority = 60, color = { r=0.5, g=0.5, b=0.5, a=1 },
+        }
+    }
+    MR.AuraEngine:Reset()
+    MR.AuraEngine:BuildCastMap(list)
+    MR.AuraEngine:OnSpellCast(8676)
+    lu.assertNotNil(MR.AuraEngine.state[91021])
+    lu.assertEquals("Find Weakness", MR.AuraEngine.state[91021].name)
 end
 
 -- ─── OnSpellCast ─────────────────────────────────────────────────────────────
@@ -125,25 +178,26 @@ function TestAuraEngineOnSpellCast:test_cast_maps_cast_id_to_buff_spell_id()
     lu.assertNil(MR.AuraEngine.state[185313])
 end
 
--- ─── Guard: don't overwrite active aura ──────────────────────────────────────
+-- ─── Refresh behaviour ───────────────────────────────────────────────────────
 
-TestAuraEngineGuard = {}
+TestAuraEngineRefresh = {}
 
-function TestAuraEngineGuard:setUp()
+function TestAuraEngineRefresh:setUp()
     MR.AuraEngine:Reset()
     MR.AuraEngine:BuildCastMap(make_tracker_list())
 end
 
-function TestAuraEngineGuard:test_spam_cast_does_not_reset_active_timer()
+function TestAuraEngineRefresh:test_recast_resets_timer()
     MR.AuraEngine:OnSpellCast(212283)
-    local first_expiry = MR.AuraEngine.state[212283].expirationTime
-    MR.AuraEngine:OnSpellCast(212283)  -- spam
-    lu.assertEquals(first_expiry, MR.AuraEngine.state[212283].expirationTime)
+    local old = _G.GetTime
+    _G.GetTime = function() return 1020.0 end  -- 20s later, mid-duration
+    MR.AuraEngine:OnSpellCast(212283)
+    lu.assertAlmostEquals(1055.0, MR.AuraEngine.state[212283].expirationTime, 0.01)
+    _G.GetTime = old
 end
 
-function TestAuraEngineGuard:test_recast_after_expiry_creates_new_entry()
+function TestAuraEngineRefresh:test_recast_after_expiry_creates_new_entry()
     MR.AuraEngine:OnSpellCast(212283)
-    -- Simulate time past expiry by temporarily overriding GetTime
     local old = _G.GetTime
     _G.GetTime = function() return 2000.0 end
     MR.AuraEngine:OnSpellCast(212283)
@@ -151,11 +205,8 @@ function TestAuraEngineGuard:test_recast_after_expiry_creates_new_entry()
     _G.GetTime = old
 end
 
-function TestAuraEngineGuard:test_permanent_aura_can_always_be_recast()
+function TestAuraEngineRefresh:test_permanent_aura_recast_keeps_entry()
     MR.AuraEngine:OnSpellCast(1784)
-    local first = MR.AuraEngine.state[1784]
-    -- Permanent auras have expirationTime=0, guard should not block recast
-    -- (they're cleared by ClearStealthOnCombat, not by expiry)
     MR.AuraEngine:OnSpellCast(1784)
     lu.assertNotNil(MR.AuraEngine.state[1784])
 end

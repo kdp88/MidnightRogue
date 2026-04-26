@@ -35,9 +35,12 @@ end
 
 function TestSubtletyDefs:test_cast_ids_are_positive_integers()
     for _, def in ipairs(self.defs) do
-        lu.assertIsNumber(def.castID, def.id .. " castID must be a number")
-        lu.assertTrue(def.castID > 0, def.id .. " castID must be > 0")
-        lu.assertEquals(math.floor(def.castID), def.castID, def.id .. " castID must be integer")
+        local ids = type(def.castID) == "table" and def.castID or { def.castID }
+        for _, cid in ipairs(ids) do
+            lu.assertIsNumber(cid, def.id .. " castID must be a number")
+            lu.assertTrue(cid > 0, def.id .. " castID must be > 0")
+            lu.assertEquals(math.floor(cid), cid, def.id .. " castID must be integer")
+        end
     end
 end
 
