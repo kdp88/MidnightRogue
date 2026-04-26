@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(where gh *)",
+      "PowerShell(Get-Command *)",
+      "PowerShell(winget list *)",
+      "PowerShell(Get-ChildItem *)"
+    ]
+  }
+}

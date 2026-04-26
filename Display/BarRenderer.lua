@@ -1,0 +1,195 @@
+--[[
+    Display/BarRenderer.lua
+    Creates, configures, and recycles individual bar frames.
+    Each bar shows: ability icon | status bar (duration) | name text | time text
+    Icons are pulled from the game client via spell data — no external assets needed.
+--]]
+
+local addonName, MR = ...
+MR.BarRenderer = {}
+local BarRenderer = MR.BarRenderer
+
+local BAR_HEIGHT    = 24
+local ICON_SIZE     = 24
+local TEXT_PADDING  = 4
+
+-- Frame pool — recycled to avoid garbage collection pressure
+local barPool = {}
+
+local function CreateBarFrame(parent)
+    local bar = CreateFrame("Frame", nil, parent)
+    bar:SetHeight(BAR_HEIGHT)
+
+    -- Icon on the left
+    bar.icon = bar:CreateTexture(nil, "ARTWORK")
+    bar.icon:SetSize(ICON_SIZE, ICON_SIZE)
+    bar.icon:SetPoint("LEFT", bar, "LEFT", 0, 0)
+    -- Trim default Blizzard icon border
+    bar.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+
+    -- Status bar fills from left to right
+    bar.statusbar = CreateFrame("StatusBar", nil, bar)
+    bar.statusbar:SetPoint("LEFT", bar.icon, "RIGHT", 2, 0)
+    bar.statusbar:SetPoint("RIGHT", bar, "RIGHT", 0, 0)
+    bar.statusbar:SetHeight(BAR_HEIGHT)
+    bar.statusbar:SetMinMaxValues(0, 1)
+    bar.statusbar:SetValue(1)
+
+    -- Bar background (slightly darker tint of bar color)
+    bar.bg = bar.statusbar:CreateTexture(nil, "BACKGROUND")
+    bar.bg:SetAllPoints(bar.statusbar)
+    bar.bg:SetColorTexture(0, 0, 0, 0.5)
+
+    -- Ability name (left of statusbar)
+    bar.nameText = bar.statusbar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    bar.nameText:SetPoint("LEFT", bar.statusbar, "LEFT", TEXT_PADDING, 0)
+    bar.nameText:SetJustifyH("LEFT")
+    bar.nameText:SetTextColor(1, 1, 1, 1)
+
+    -- Duration remaining (right of statusbar)
+    bar.timeText = bar.statusbar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    bar.timeText:SetPoint("RIGHT", bar.statusbar, "RIGHT", -TEXT_PADDING, 0)
+    bar.timeText:SetJustifyH("RIGHT")
+    bar.timeText:SetTextColor(1, 1, 1, 1)
+
+    -- Stack count overlaid on icon — must parent to bar (Frame), not bar.icon (Texture)
+    bar.stackText = bar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    bar.stackText:SetPoint("BOTTOMRIGHT", bar.icon, "BOTTOMRIGHT", 0, 0)
+    bar.stackText:SetTextColor(1, 1, 0, 1)
+
+    bar:Hide()
+    return bar
+end
+
+-- Pull a bar from the pool or create a new one
+function BarRenderer:AcquireBar(parent)
+    local bar = table.remove(barPool)
+    if not bar then
+        bar = CreateBarFrame(parent)
+    else
+        bar:SetParent(parent)
+    end
+    bar:Show()
+    return bar
+end
+
+-- Return a bar to the pool
+function BarRenderer:ReleaseBar(bar)
+    bar:Hide()
+    bar:ClearAllPoints()
+    -- Clear state so stale data doesn't bleed into the next use
+    bar.trackerID  = nil
+    bar.startTime  = nil
+    bar.endTime    = nil
+    bar.duration   = nil
+    bar.flashBelow = nil
+    table.insert(barPool, bar)
+end
+
+-- Configure a bar from a tracker definition and live aura data
+-- trackerDef: entry from TrackerDefinitions/Subtlety.lua
+-- auraData:   result from AuraEngine:GetPlayerBuff / GetTargetDebuff
+-- settings:   per-tracker user settings from saved variables
+function BarRenderer:ConfigureBar(bar, trackerDef, auraData, settings)
+    local cfg = settings or {}
+
+    -- Icon: use user override if set, otherwise pull from spell data
+    local iconID = cfg.iconOverride or MR.AuraEngine:GetSpellIcon(trackerDef.spellID)
+    if iconID then
+        bar.icon:SetTexture(iconID)
+        bar.icon:Show()
+    else
+        bar.icon:Hide()
+    end
+
+    -- Bar color: user override first, then tracker default
+    local r = cfg.color and cfg.color.r or trackerDef.color.r
+    local g = cfg.color and cfg.color.g or trackerDef.color.g
+    local b = cfg.color and cfg.color.b or trackerDef.color.b
+    local a = cfg.color and cfg.color.a or trackerDef.color.a
+    bar.statusbar:SetStatusBarColor(r, g, b, a)
+
+    -- Bar texture
+    if cfg.texture then
+        bar.statusbar:SetStatusBarTexture(cfg.texture)
+    else
+        bar.statusbar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
+    end
+
+    -- Name text
+    local showName = cfg.showName ~= false  -- default true
+    if showName then
+        bar.nameText:SetText(cfg.nameOverride or trackerDef.name)
+        bar.nameText:Show()
+    else
+        bar.nameText:Hide()
+    end
+
+    -- Stacks
+    local stacks = auraData.stacks or 0
+    local showStacks = trackerDef.showStacks and stacks > 1
+    if showStacks then
+        bar.stackText:SetText(tostring(stacks))
+        bar.stackText:Show()
+    else
+        bar.stackText:Hide()
+    end
+
+    -- Duration tracking data stored on the bar for OnUpdate
+    bar.trackerID  = trackerDef.id
+    bar.duration   = auraData.duration
+    bar.endTime    = auraData.expirationTime
+    bar.startTime  = auraData.expirationTime - auraData.duration
+    bar.flashBelow = trackerDef.flashBelow or cfg.flashBelow
+    bar.showDuration = trackerDef.showDuration
+
+    -- Initial bar fill
+    BarRenderer:UpdateBar(bar)
+end
+
+-- Called every frame via the bar group's OnUpdate handler
+function BarRenderer:UpdateBar(bar)
+    if not bar.endTime then
+        bar.statusbar:SetValue(1)
+        bar.timeText:Hide()
+        return
+    end
+
+    local now      = MR.AuraEngine:Now()
+    local remaining = bar.endTime - now
+    local total     = bar.duration
+
+    if remaining <= 0 then
+        -- Signal to BarGroup that this bar should be released
+        bar.expired = true
+        return
+    end
+
+    -- Fill proportion
+    if total and total > 0 then
+        bar.statusbar:SetValue(remaining / total)
+    else
+        bar.statusbar:SetValue(1)
+    end
+
+    -- Duration text
+    if bar.showDuration then
+        if remaining >= 60 then
+            bar.timeText:SetText(string.format("%dm", math.floor(remaining / 60)))
+        else
+            bar.timeText:SetText(string.format("%.1f", remaining))
+        end
+        bar.timeText:Show()
+    else
+        bar.timeText:Hide()
+    end
+
+    -- Flash when low
+    MR.Animations:UpdateFlash(bar, remaining)
+end
+
+-- Set the pixel width of a bar
+function BarRenderer:SetWidth(bar, width)
+    bar:SetWidth(width)
+    -- Icon stays fixed; statusbar stretches
+end
