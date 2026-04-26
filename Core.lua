@@ -27,6 +27,17 @@ local inCombat      = false
 function addon:OnInitialize()
     MR.db = LibStub("AceDB-3.0"):New("MidnightRogueDB", MR.Defaults, true)
 
+    self:RegisterChatCommand("mr", "OnChatCommand")
+
+    local opts = MR.Options:Build(nil)
+    LibStub("AceConfig-3.0"):RegisterOptionsTable("MidnightRogue", opts)
+
+    MR.BarGroup:SetLocked(MR.db.profile.locked)
+end
+
+-- Deferred init: called in PLAYER_ENTERING_WORLD so player APIs
+-- (IsPlayerSpell, UnitHaste, GetSpecialization) are available.
+local function InitTracker()
     local tracker, specName = MR.SpecDetection:LoadTrackerForCurrentSpec()
     activeTracker = tracker
 
@@ -42,13 +53,6 @@ function addon:OnInitialize()
             MR.BarGroup:GetOrCreate(groupName, settings)
         end
     end
-
-    self:RegisterChatCommand("mr", "OnChatCommand")
-
-    local opts = MR.Options:Build(activeTracker)
-    LibStub("AceConfig-3.0"):RegisterOptionsTable("MidnightRogue", opts)
-
-    MR.BarGroup:SetLocked(MR.db.profile.locked)
 end
 
 function addon:OnEnable()
@@ -65,6 +69,7 @@ end
 -- ============================================================
 
 function addon:PLAYER_ENTERING_WORLD()
+    InitTracker()
     MR.AuraEngine:Reset()
     MR:RefreshDisplay()
 end
