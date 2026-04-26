@@ -102,14 +102,14 @@ MR.Trackers["Subtlety"] = {
         name     = "Crimson Vial",
         spellID  = 185311,
         castID   = 185311,
-        duration = 4,
+        duration = 30,         -- cooldown window; bar visible while on CD
         auraType = "player_buff",
         group    = "cooldowns",
         priority = 86,
         color    = { r = 0.9, g = 0.1, b = 0.1, a = 1.0 },
         showDuration = true,
         showStacks   = false,
-        flashBelow   = 2,
+        flashBelow   = 5,
     },
     {
         id       = "slice_and_dice",
