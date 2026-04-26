@@ -8,7 +8,7 @@
       UNIT_SPELLCAST_SUCCEEDED   → player cast detected, update aura state
       PLAYER_TARGET_CHANGED      → refresh display
       PLAYER_FOCUS_CHANGED       → refresh display
-      PLAYER_REGEN_DISABLED      → entered combat, clear permanent stealth bars
+      PLAYER_REGEN_DISABLED      → entered combat, refresh display
       PLAYER_REGEN_ENABLED       → left combat, reset all aura state
 --]]
 
@@ -92,7 +92,6 @@ end
 
 function addon:PLAYER_REGEN_DISABLED()
     inCombat = true
-    MR.AuraEngine:ClearStealthOnCombat()
     MR:RefreshDisplay()
 end
 

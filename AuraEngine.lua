@@ -100,15 +100,6 @@ function AuraEngine:ClearUnitDebuffs(auraType)
     end
 end
 
--- Clear only stealth-state auras (on PLAYER_REGEN_DISABLED — entered combat)
-function AuraEngine:ClearStealthOnCombat()
-    for spellID, data in pairs(self.state) do
-        local def = self:GetDefBySpellID(spellID)
-        if def and def.group == "stealth" and (def.duration or 0) == 0 then
-            self.state[spellID] = nil
-        end
-    end
-end
 
 function AuraEngine:GetDefBySpellID(spellID)
     for _, defs in pairs(self._castMap) do

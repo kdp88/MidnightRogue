@@ -456,25 +456,6 @@ function TestAuraEngineReset:test_reset_clears_all_state()
     lu.assertNil(MR.AuraEngine.state[1784])
 end
 
-function TestAuraEngineReset:test_clear_stealth_removes_permanent_stealth_group()
-    MR.AuraEngine:OnSpellCast(1784)   -- stealth group, duration=0
-    MR.AuraEngine:ClearStealthOnCombat()
-    lu.assertNil(MR.AuraEngine.state[1784])
-end
-
-function TestAuraEngineReset:test_clear_stealth_keeps_timed_stealth_group()
-    MR.AuraEngine:OnSpellCast(185313)  -- shadow dance: stealth group, duration=8
-    MR.AuraEngine:ClearStealthOnCombat()
-    lu.assertNotNil(MR.AuraEngine.state[185422])
-end
-
-function TestAuraEngineReset:test_clear_stealth_keeps_non_stealth_auras()
-    MR.AuraEngine:OnSpellCast(212283)  -- cooldowns group
-    MR.AuraEngine:OnSpellCast(1943)    -- dots group
-    MR.AuraEngine:ClearStealthOnCombat()
-    lu.assertNotNil(MR.AuraEngine.state[212283])
-    lu.assertNotNil(MR.AuraEngine.state[1943])
-end
 
 -- ─── ClearUnitDebuffs ────────────────────────────────────────────────────────
 
