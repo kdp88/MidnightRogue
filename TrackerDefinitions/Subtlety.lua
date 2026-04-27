@@ -16,7 +16,7 @@ MR.Trackers = MR.Trackers or {}
 MR.Trackers["Subtlety"] = {
 
     -- =========================================================
-    -- STEALTH STATES
+    -- BUFFS (stealth states + cooldowns)
     -- =========================================================
     {
         id       = "vanish",
@@ -25,7 +25,7 @@ MR.Trackers["Subtlety"] = {
         castID   = 1856,       -- 1856 = Vanish ability; 11327 = the buff it applies
         duration = 3,
         auraType = "player_buff",
-        group    = "stealth",
+        group    = "buffs",
         priority = 99,
         color    = { r = 0.2, g = 0.2, b = 1.0, a = 1.0 },
         showDuration = true,
@@ -38,7 +38,7 @@ MR.Trackers["Subtlety"] = {
         castID   = 185313,     -- 185313 = Shadow Dance ability; 185422 = the buff
         duration = 8,
         auraType = "player_buff",
-        group    = "stealth",
+        group    = "buffs",
         priority = 98,
         color    = { r = 0.5, g = 0.0, b = 0.8, a = 1.0 },
         showDuration = true,
@@ -51,7 +51,7 @@ MR.Trackers["Subtlety"] = {
         castID   = 115192,
         duration = 3,
         auraType = "player_buff",
-        group    = "stealth",
+        group    = "buffs",
         priority = 97,
         color    = { r = 0.6, g = 0.2, b = 0.9, a = 1.0 },
         showDuration = true,
@@ -60,7 +60,7 @@ MR.Trackers["Subtlety"] = {
     },
 
     -- =========================================================
-    -- MAJOR COOLDOWNS
+    -- COOLDOWNS (part of buffs group)
     -- =========================================================
     {
         id          = "secret_technique",
@@ -73,7 +73,7 @@ MR.Trackers["Subtlety"] = {
             { spellID = 441274, durationMult = 0.90 },  -- Disorienting Strikes: -10% CD
         },
         auraType     = "player_buff",
-        group        = "cooldowns",
+        group        = "buffs",
         priority     = 91,
         color        = { r = 0.4, g = 0.0, b = 0.9, a = 1.0 },
         showDuration = true,
@@ -91,7 +91,7 @@ MR.Trackers["Subtlety"] = {
             { spellID = 231691, cooldown = 60 },  -- Improved Sprint
         },
         auraType = "player_buff",
-        group    = "cooldowns",
+        group    = "buffs",
         priority = 85,
         color    = { r = 0.8, g = 0.8, b = 0.0, a = 1.0 },
         showDuration = true,
@@ -104,7 +104,7 @@ MR.Trackers["Subtlety"] = {
         castID   = 185311,
         duration = 30,         -- cooldown window; bar visible while on CD
         auraType = "player_buff",
-        group    = "cooldowns",
+        group    = "buffs",
         priority = 86,
         color    = { r = 0.9, g = 0.1, b = 0.1, a = 1.0 },
         showDuration = true,
@@ -122,7 +122,7 @@ MR.Trackers["Subtlety"] = {
             { spellID = 394320, durationAdd = 6 },  -- Secret Stratagem: +1 CP
         },
         auraType = "player_buff",
-        group    = "cooldowns",
+        group    = "buffs",
         priority = 87,
         color    = { r = 0.0, g = 0.8, b = 0.3, a = 1.0 },
         showDuration = true,
@@ -136,7 +136,7 @@ MR.Trackers["Subtlety"] = {
         castID   = 212283,
         duration = 35,
         auraType = "player_buff",
-        group    = "cooldowns",
+        group    = "buffs",
         priority = 90,
         color    = { r = 1.0, g = 0.2, b = 0.2, a = 1.0 },
         showDuration = true,
@@ -149,7 +149,7 @@ MR.Trackers["Subtlety"] = {
         castID   = 121471,
         duration = 20,
         auraType = "player_buff",
-        group    = "cooldowns",
+        group    = "buffs",
         priority = 89,
         color    = { r = 0.1, g = 0.1, b = 0.1, a = 1.0 },
         showDuration = true,
@@ -162,7 +162,7 @@ MR.Trackers["Subtlety"] = {
         castID   = 323654,     -- cast ID is the Flagellation ability
         duration = 12,
         auraType = "player_buff",
-        group    = "cooldowns",
+        group    = "buffs",
         priority = 88,
         color    = { r = 0.9, g = 0.5, b = 0.1, a = 1.0 },
         showDuration = true,
@@ -228,7 +228,7 @@ MR.Trackers["Subtlety"] = {
         castID   = 1943,
         duration = 24,         -- max duration at 6 combo points
         auraType = "target_debuff",
-        group    = "dots",
+        group    = "debuffs",
         priority = 70,
         color    = { r = 0.9, g = 0.1, b = 0.1, a = 1.0 },
         showDuration = true,

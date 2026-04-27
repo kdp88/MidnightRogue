@@ -67,7 +67,7 @@ function TestSubtletyDefs:test_aura_types_are_valid()
 end
 
 function TestSubtletyDefs:test_groups_are_valid()
-    local valid = { stealth=true, cooldowns=true, procs=true, dots=true, debuffs=true }
+    local valid = { buffs=true, procs=true, debuffs=true }
     for _, def in ipairs(self.defs) do
         lu.assertNotNil(valid[def.group], def.id .. " unknown group: " .. tostring(def.group))
     end

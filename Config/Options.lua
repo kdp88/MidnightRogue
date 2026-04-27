@@ -9,11 +9,9 @@ MR.Options = {}
 local Options = MR.Options
 
 local GROUP_LABELS = {
-    stealth   = "Stealth States",
-    cooldowns = "Major Cooldowns",
-    procs     = "Procs",
-    dots      = "DoTs on Target",
-    debuffs   = "Debuffs on Target",
+    buffs   = "Buffs",
+    procs   = "Procs",
+    debuffs = "Debuffs",
 }
 
 local function GetGroupOptions(groupName)

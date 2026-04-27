@@ -12,14 +12,7 @@ MR.Defaults = {
         locked  = true,
         -- Per-group layout settings
         groups = {
-            stealth = {
-                enabled  = true,
-                width    = 220,
-                grow     = "UP",
-                x        = 0,
-                y        = 200,
-            },
-            cooldowns = {
+            buffs = {
                 enabled  = true,
                 width    = 220,
                 grow     = "UP",
@@ -31,14 +24,7 @@ MR.Defaults = {
                 width    = 220,
                 grow     = "UP",
                 x        = 0,
-                y        = 100,
-            },
-            dots = {
-                enabled  = true,
-                width    = 220,
-                grow     = "UP",
-                x        = 0,
-                y        = 50,
+                y        = 75,
             },
             debuffs = {
                 enabled  = true,
