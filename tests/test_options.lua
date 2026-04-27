@@ -47,6 +47,20 @@ function TestOptionsBuild:test_build_returns_group_type()
     lu.assertEquals("group", opts.type)
 end
 
+function TestOptionsBuild:test_build_with_nil_does_not_crash()
+    local opts = MR.Options:Build(nil)
+    lu.assertNotNil(opts)
+    lu.assertEquals("group", opts.type)
+end
+
+function TestOptionsBuild:test_build_with_nil_still_has_all_panels()
+    local opts = MR.Options:Build(nil)
+    lu.assertNotNil(opts.args.general)
+    lu.assertNotNil(opts.args.buffs)
+    lu.assertNotNil(opts.args.procs)
+    lu.assertNotNil(opts.args.debuffs)
+end
+
 function TestOptionsBuild:test_build_creates_buffs_procs_debuffs_panels()
     local opts = MR.Options:Build({})
     lu.assertNotNil(opts.args.buffs)
