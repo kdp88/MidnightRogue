@@ -10,5 +10,6 @@ require("tests.test_subtlety_defs")
 require("tests.test_animations")
 require("tests.test_bar_renderer")
 require("tests.test_aura_engine")
+require("tests.test_options")
 
 os.exit(lu.LuaUnit.run())
