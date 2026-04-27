@@ -30,4 +30,5 @@ Display\BarGroup.lua
 Config\Defaults.lua
 Config\Options.lua
 Config\Profiles.lua
+Config\SettingsUI.lua
 Core.lua

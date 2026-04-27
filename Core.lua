@@ -28,10 +28,6 @@ function addon:OnInitialize()
     MR.db = LibStub("AceDB-3.0"):New("MidnightRogueDB", MR.Defaults, true)
 
     self:RegisterChatCommand("mr", "OnChatCommand")
-
-    local opts = MR.Options:Build(nil)
-    LibStub("AceConfig-3.0"):RegisterOptionsTable("MidnightRogue", opts)
-
     MR.BarGroup:SetLocked(MR.db.profile.locked)
 end
 
@@ -53,6 +49,8 @@ local function InitTracker()
             MR.BarGroup:GetOrCreate(groupName, settings)
         end
     end
+
+    MR.SettingsUI:Rebuild(activeTracker)
 end
 
 function addon:OnEnable()
@@ -178,6 +176,6 @@ function addon:OnChatCommand(input)
         end
         if mapCount == 0 then self:Print("  (empty — BuildCastMap may not have run)") end
     else
-        LibStub("AceConfigDialog-3.0"):Open("MidnightRogue")
+        MR.SettingsUI:Open()
     end
 end
