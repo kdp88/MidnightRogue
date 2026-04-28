@@ -24,8 +24,23 @@ function AuraEngine:ResolveTalents(trackerList)
         -- snapshot base values on first call so re-runs don't compound
         if def._baseDuration == nil then def._baseDuration = def.duration end
         if def._baseCooldown == nil then def._baseCooldown = def.cooldown end
+        if def._baseCastID == nil then
+            if type(def.castID) == "table" then
+                def._baseCastID = {}
+                for _, v in ipairs(def.castID) do def._baseCastID[#def._baseCastID+1] = v end
+            else
+                def._baseCastID = def.castID
+            end
+        end
         def.duration = def._baseDuration
         def.cooldown = def._baseCooldown
+        -- restore castID as a fresh copy so castIDAdd doesn't compound
+        if type(def._baseCastID) == "table" then
+            def.castID = {}
+            for _, v in ipairs(def._baseCastID) do def.castID[#def.castID+1] = v end
+        else
+            def.castID = def._baseCastID
+        end
 
         if def.talents then
             for _, mod in ipairs(def.talents) do
@@ -34,6 +49,13 @@ function AuraEngine:ResolveTalents(trackerList)
                     if mod.durationAdd  then def.duration = def.duration + mod.durationAdd end
                     if mod.durationMult then def.duration = def.duration * mod.durationMult end
                     if mod.cooldown     then def.cooldown = mod.cooldown end
+                    if mod.castIDAdd    then
+                        if type(def.castID) == "table" then
+                            table.insert(def.castID, mod.castIDAdd)
+                        else
+                            def.castID = { def.castID, mod.castIDAdd }
+                        end
+                    end
                 end
             end
         end

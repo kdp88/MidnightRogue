@@ -145,6 +145,54 @@ function TestAuraEngineTalents:test_duration_add_both_talents_stack()
     lu.assertEquals(54, list[1].duration)  -- base 42 + 6 + 6
 end
 
+function TestAuraEngineTalents:test_cast_id_add_appends_when_talent_learned()
+    _G.IsPlayerSpell = function(id) return id == 319949 end
+    local list = {
+        {
+            id = "find_weakness", name = "Find Weakness", spellID = 91021,
+            castID = { 1833, 185438 }, duration = 10,
+            talents = { { spellID = 319949, castIDAdd = 53 } },
+            group = "debuffs", auraType = "target_debuff",
+            priority = 60, color = { r=0.5, g=0.5, b=0.5, a=1 },
+        }
+    }
+    MR.AuraEngine:ResolveTalents(list)
+    lu.assertEquals(3, #list[1].castID)
+    lu.assertEquals(53, list[1].castID[3])
+end
+
+function TestAuraEngineTalents:test_cast_id_add_skipped_when_talent_not_learned()
+    _G.IsPlayerSpell = function(id) return false end
+    local list = {
+        {
+            id = "find_weakness", name = "Find Weakness", spellID = 91021,
+            castID = { 1833, 185438 }, duration = 10,
+            talents = { { spellID = 319949, castIDAdd = 53 } },
+            group = "debuffs", auraType = "target_debuff",
+            priority = 60, color = { r=0.5, g=0.5, b=0.5, a=1 },
+        }
+    }
+    MR.AuraEngine:ResolveTalents(list)
+    lu.assertEquals(2, #list[1].castID)
+end
+
+function TestAuraEngineTalents:test_cast_id_add_does_not_compound_on_repeated_resolve()
+    _G.IsPlayerSpell = function(id) return id == 319949 end
+    local list = {
+        {
+            id = "find_weakness", name = "Find Weakness", spellID = 91021,
+            castID = { 1833, 185438 }, duration = 10,
+            talents = { { spellID = 319949, castIDAdd = 53 } },
+            group = "debuffs", auraType = "target_debuff",
+            priority = 60, color = { r=0.5, g=0.5, b=0.5, a=1 },
+        }
+    }
+    MR.AuraEngine:ResolveTalents(list)
+    MR.AuraEngine:ResolveTalents(list)
+    MR.AuraEngine:ResolveTalents(list)
+    lu.assertEquals(3, #list[1].castID)  -- not 5 or 7
+end
+
 function TestAuraEngineTalents:test_haste_scales_duration_no_talents()
     _G.IsPlayerSpell = function(id) return false end
     _G.GetHaste = function() return 19.0 end
