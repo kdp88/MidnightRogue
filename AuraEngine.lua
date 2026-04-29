@@ -94,16 +94,19 @@ function AuraEngine:OnSpellCast(spellID)
 
     local now = GetTime()
     for _, def in ipairs(defs) do
-        local existing = self.state[def.spellID]
-        local duration = def.duration or 0
-        self.state[def.spellID] = {
-            name           = def.name,
-            icon           = self:GetSpellIcon(def.spellID),
-            stacks         = existing and existing.stacks or 1,
-            duration       = duration,
-            expirationTime = duration > 0 and (now + duration) or 0,
-            isActive       = true,
-        }
+        local t = MR.db and MR.db.profile.trackers[def.id]
+        if not (t and t.enabled == false) then
+            local existing = self.state[def.spellID]
+            local duration = def.duration or 0
+            self.state[def.spellID] = {
+                name           = def.name,
+                icon           = self:GetSpellIcon(def.spellID),
+                stacks         = existing and existing.stacks or 1,
+                duration       = duration,
+                expirationTime = duration > 0 and (now + duration) or 0,
+                isActive       = true,
+            }
+        end
     end
 end
 

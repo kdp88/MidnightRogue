@@ -272,9 +272,6 @@ MR.Trackers["Subtlety"] = {
         name     = "Find Weakness",
         spellID  = 91021,
         castID   = { 1833, 185438 },  -- Cheap Shot, Shadowstrike
-        talents  = {
-            { spellID = 319949, castIDAdd = 53 },  -- Improved Backstab: Backstab also applies Find Weakness
-        },
         duration = 10,
         auraType = "target_debuff",
         group    = "debuffs",
@@ -282,6 +279,20 @@ MR.Trackers["Subtlety"] = {
         color    = { r = 0.5, g = 0.5, b = 0.5, a = 1.0 },
         showDuration = true,
         showStacks   = false,
+    },
+    {
+        id       = "find_weakness_backstab",
+        name     = "Find Weakness (Backstab)",
+        spellID  = 91021,
+        castID   = 53,
+        duration = 10,
+        auraType = "target_debuff",
+        group    = "debuffs",
+        priority = 59,
+        color    = { r = 0.5, g = 0.5, b = 0.5, a = 1.0 },
+        showDuration = true,
+        showStacks   = false,
+        optional     = true,  -- requires Improved Backstab (319949); off by default
     },
     {
         id       = "echoing_reprimand",

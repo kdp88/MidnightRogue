@@ -37,6 +37,7 @@ MR.Defaults = {
         -- Per-tracker overrides keyed by tracker id (e.g. "rupture", "shadow_dance")
         -- Anything not set here falls back to the tracker definition defaults.
         trackers = {
+            find_weakness_backstab = { enabled = false },
             -- Example entry shape (populated from tracker defaults on first load):
             -- rupture = {
             --     enabled      = true,
