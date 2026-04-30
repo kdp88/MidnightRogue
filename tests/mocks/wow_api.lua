@@ -129,6 +129,43 @@ _G.GetSpecialization = function() return 3 end  -- default: Subtlety
 -- Haste (percentage, e.g. 19.0 = 19%)
 _G.GetHaste = function() return 0 end
 
+-- Talent / spell detection
+_G.IsPlayerSpell = function() return false end
+
+-- LibStub minimal mock — supports AceAddon-3.0 and AceDB-3.0
+do
+    local _libs = {}
+    _G.LibStub = function(name)
+        if _libs[name] then return _libs[name] end
+        local lib = {}
+        _libs[name] = lib
+        return lib
+    end
+
+    local aceAddon = _G.LibStub("AceAddon-3.0")
+    aceAddon.NewAddon = function(self, name, ...)
+        local a = {}
+        a.RegisterChatCommand = function() end
+        a.RegisterEvent       = function() end
+        a.UnregisterEvent     = function() end
+        a.Print               = function() end
+        return a
+    end
+
+    local function deepcopy(orig)
+        if type(orig) ~= "table" then return orig end
+        local copy = {}
+        for k, v in pairs(orig) do copy[k] = deepcopy(v) end
+        return copy
+    end
+
+    local aceDB = _G.LibStub("AceDB-3.0")
+    aceDB.New = function(self, svName, defaults)
+        local profile = deepcopy(defaults and defaults.profile or {})
+        return { profile = profile }
+    end
+end
+
 -- Shared globals the addon references
 _G.math  = math
 _G.table = table

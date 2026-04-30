@@ -40,6 +40,7 @@ local function addon_searcher(modname)
         ["Defaults"]            = base .. "Config/Defaults.lua",
         ["Options"]             = base .. "Config/Options.lua",
         ["Profiles"]            = base .. "Config/Profiles.lua",
+        ["Core"]                = base .. "Core.lua",
     }
     local filepath = paths[modname]
     if not filepath then return nil end

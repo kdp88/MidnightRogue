@@ -288,7 +288,7 @@ MR.Trackers["Subtlety"] = {
         duration = 10,
         auraType = "target_debuff",
         group    = "debuffs",
-        priority = 59,
+        priority = 57,
         color    = { r = 0.5, g = 0.5, b = 0.5, a = 1.0 },
         showDuration = true,
         showStacks   = false,

@@ -29,13 +29,38 @@ This is a deliberate design choice for stability. Future versions may support li
    - [LibSharedMedia-3.0](https://www.wowace.com/projects/libsharedmedia-3-0)
 3. Log in and type `/mr` to open configuration.
 
+## Configuration
+
+### Opening the panel
+
+Type `/mr` to open the settings panel. It has three tabs: **Buffs**, **Procs**, and **Debuffs**.
+
+### Unlocking bars for repositioning
+
+Click **Unlock Bars** in the top-right of the settings panel. The button turns green and reads **Lock Bars** while unlocked. Drag any bar group to reposition it. Click **Lock Bars** to save the position and re-lock. The lock state persists across sessions.
+
+### Enable / disable a tracker
+
+Click the **green or gray box on the left** of any tracker row to toggle it on or off. Green = enabled, gray = disabled. Takes effect immediately.
+
+### Bar width (per group)
+
+Each tab has a **Width** row at the top with `[-]` and `[+]` buttons. Each click steps by 10px (range 100–400px). All bars in that group resize immediately.
+
+### Bar color (per tracker)
+
+Click the **small colored square on the right** of any tracker row to open the color picker.
+
+- WoW's built-in color picker opens if available. Drag to pick a color — the bar updates live. Click OK to confirm, Cancel to revert.
+- If the built-in picker is unavailable (Midnight API restriction), a 12-color preset palette appears instead. Click any swatch to apply.
+
+The swatch always reflects the current effective color — either your saved override or the tracker's default.
+
 ## Commands
 
 | Command | Action |
 |---|---|
 | `/mr` | Open configuration panel |
-| `/mr unlock` | Unlock bar groups for dragging |
-| `/mr lock` | Lock bar groups in place |
 | `/mr reset` | Reset all bar positions to defaults |
 | `/reload` | Reload UI (required after spec change) |
 

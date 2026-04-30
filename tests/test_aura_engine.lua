@@ -418,6 +418,42 @@ function TestAuraEngineOnSpellCast:test_cast_maps_cast_id_to_buff_spell_id()
     lu.assertNil(MR.AuraEngine.state[185313])
 end
 
+function TestAuraEngineOnSpellCast:test_disabled_tracker_skips_state()
+    MR.db = { profile = { trackers = { symbols_of_death = { enabled = false } } } }
+    MR.AuraEngine:OnSpellCast(212283)
+    lu.assertNil(MR.AuraEngine.state[212283])
+    MR.db = nil
+end
+
+function TestAuraEngineOnSpellCast:test_enabled_tracker_still_writes_state()
+    MR.db = { profile = { trackers = { symbols_of_death = { enabled = true } } } }
+    MR.AuraEngine:OnSpellCast(212283)
+    lu.assertNotNil(MR.AuraEngine.state[212283])
+    MR.db = nil
+end
+
+function TestAuraEngineOnSpellCast:test_missing_db_entry_defaults_to_enabled()
+    -- trackers table exists but no entry for this tracker — should still fire
+    MR.db = { profile = { trackers = {} } }
+    MR.AuraEngine:OnSpellCast(212283)
+    lu.assertNotNil(MR.AuraEngine.state[212283])
+    MR.db = nil
+end
+
+function TestAuraEngineOnSpellCast:test_nil_db_defaults_to_enabled()
+    MR.db = nil
+    MR.AuraEngine:OnSpellCast(212283)
+    lu.assertNotNil(MR.AuraEngine.state[212283])
+end
+
+function TestAuraEngineOnSpellCast:test_disabled_does_not_affect_other_trackers()
+    -- disabling rupture should not block symbols_of_death on the same cast event
+    MR.db = { profile = { trackers = { rupture = { enabled = false } } } }
+    MR.AuraEngine:OnSpellCast(212283)
+    lu.assertNotNil(MR.AuraEngine.state[212283])
+    MR.db = nil
+end
+
 -- ─── Refresh behaviour ───────────────────────────────────────────────────────
 
 TestAuraEngineRefresh = {}

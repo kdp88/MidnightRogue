@@ -102,12 +102,15 @@ end
 -- Display Refresh
 -- ============================================================
 
+local PREVIEW_AURA = { isActive = true, stacks = 0, duration = 0, expirationTime = 0 }
+
 function MR:RefreshDisplay()
     if not activeTracker then return end
 
     MR.BarGroup:ClearAll()
 
     local groupCfg = MR.db.profile.groups
+    local unlocked  = MR.db.profile.locked == false
 
     for _, trackerDef in ipairs(activeTracker) do
         local groupName = trackerDef.group
@@ -117,7 +120,9 @@ function MR:RefreshDisplay()
             local enabled = trackerSettings == nil and true or (trackerSettings.enabled ~= false)
             if enabled then
                 local auraData
-                if trackerDef.auraType == "player_buff" then
+                if unlocked then
+                    auraData = PREVIEW_AURA
+                elseif trackerDef.auraType == "player_buff" then
                     auraData = MR.AuraEngine:GetPlayerBuff(trackerDef.spellID)
                 elseif trackerDef.auraType == "target_debuff" then
                     auraData = MR.AuraEngine:GetTargetDebuff("target", trackerDef.spellID)
@@ -142,15 +147,7 @@ end
 
 function addon:OnChatCommand(input)
     local cmd = string.lower(string.trim(input or ""))
-    if cmd == "unlock" then
-        MR.db.profile.locked = false
-        MR.BarGroup:SetLocked(false)
-        self:Print("Bar groups unlocked. Drag to reposition.")
-    elseif cmd == "lock" then
-        MR.db.profile.locked = true
-        MR.BarGroup:SetLocked(true)
-        self:Print("Bar groups locked.")
-    elseif cmd == "reset" then
+    if cmd == "reset" then
         for groupName, defaults in pairs(MR.Defaults.profile.groups) do
             MR.db.profile.groups[groupName].x = defaults.x
             MR.db.profile.groups[groupName].y = defaults.y

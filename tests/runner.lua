@@ -11,5 +11,6 @@ require("tests.test_animations")
 require("tests.test_bar_renderer")
 require("tests.test_aura_engine")
 require("tests.test_options")
+require("tests.test_core")
 
 os.exit(lu.LuaUnit.run())

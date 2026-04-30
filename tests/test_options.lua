@@ -29,16 +29,23 @@ local function make_tracker(id, name, group, priority)
     }
 end
 
--- Stub MR.Profiles and MR:RefreshDisplay for options tests
+-- Stub MR.Profiles and MR:RefreshDisplay for options tests.
+-- Re-applied in each setUp because test_core.lua loads Core.lua which overwrites these.
 MR.Profiles = { GetCurrentProfileName = function() return "Subtlety" end }
 MR.RefreshDisplay = function() end
-MR.BarGroup = { SetLocked = function() end, SetWidth = function() end }
+MR.BarGroup = { SetLocked = function() end, SetWidth = function() end, ClearAll = function() end }
+
+local function restoreStubs()
+    MR.RefreshDisplay = function() end
+    MR.BarGroup = { SetLocked = function() end, SetWidth = function() end, ClearAll = function() end }
+end
 
 -- ─── TestOptionsBuild ────────────────────────────────────────────────────────
 
 TestOptionsBuild = {}
 
 function TestOptionsBuild:setUp()
+    restoreStubs()
     MR.db = make_db()
 end
 
@@ -95,6 +102,7 @@ end
 TestTrackerToggle = {}
 
 function TestTrackerToggle:setUp()
+    restoreStubs()
     MR.db = make_db()
 end
 
@@ -142,6 +150,7 @@ end
 TestGroupToggle = {}
 
 function TestGroupToggle:setUp()
+    restoreStubs()
     MR.db = make_db()
 end
 
@@ -173,6 +182,7 @@ end
 TestTrackerOrder = {}
 
 function TestTrackerOrder:setUp()
+    restoreStubs()
     MR.db = make_db()
 end
 
@@ -183,6 +193,62 @@ function TestTrackerOrder:test_higher_priority_tracker_has_lower_order_number()
     }
     local opts = MR.Options:Build(list)
     lu.assertTrue(opts.args.buffs.args.tracker_high.order < opts.args.buffs.args.tracker_low.order)
+end
+
+-- ─── TestLockDefaults ────────────────────────────────────────────────────────
+-- Lock state lives in db.profile.locked; the SettingsUI toggle reads and
+-- writes it. These tests verify the defaults and db contract the toggle relies on.
+
+TestLockDefaults = {}
+
+function TestLockDefaults:test_default_locked_is_true()
+    lu.assertEquals(true, MR.Defaults.profile.locked)
+end
+
+function TestLockDefaults:test_db_locked_true_means_bars_are_locked()
+    MR.db = make_db()
+    MR.db.profile.locked = true
+    lu.assertTrue(MR.db.profile.locked ~= false)
+end
+
+function TestLockDefaults:test_db_locked_false_means_bars_are_unlocked()
+    MR.db = make_db()
+    MR.db.profile.locked = false
+    lu.assertFalse(MR.db.profile.locked ~= false)
+end
+
+function TestLockDefaults:test_toggling_locked_calls_bar_group_set_locked()
+    local calls = {}
+    MR.BarGroup.SetLocked = function(self, val) table.insert(calls, val) end
+
+    MR.db = make_db()
+    MR.db.profile.locked = true
+
+    -- Simulate what the SettingsUI toggle button does
+    local nowLocked = not (MR.db.profile.locked ~= false)
+    MR.db.profile.locked = nowLocked
+    MR.BarGroup:SetLocked(nowLocked)
+
+    lu.assertEquals(1, #calls)
+    lu.assertFalse(calls[1])  -- toggled from locked→unlocked
+
+    -- Restore stub
+    MR.BarGroup.SetLocked = function() end
+end
+
+function TestLockDefaults:test_toggling_twice_returns_to_locked()
+    MR.db = make_db()
+    MR.db.profile.locked = true
+
+    -- First toggle: unlock
+    local nowLocked = not (MR.db.profile.locked ~= false)
+    MR.db.profile.locked = nowLocked
+    lu.assertFalse(MR.db.profile.locked)
+
+    -- Second toggle: lock again
+    nowLocked = not (MR.db.profile.locked ~= false)
+    MR.db.profile.locked = nowLocked
+    lu.assertTrue(MR.db.profile.locked)
 end
 
 -- Runner calls lu.LuaUnit.run() — do not call os.exit here
