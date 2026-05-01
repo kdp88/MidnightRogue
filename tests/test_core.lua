@@ -143,4 +143,14 @@ function TestRefreshDisplayPreview:test_preview_aura_not_mutated_across_multiple
     lu.assertTrue(a2.isActive)
 end
 
+function TestRefreshDisplayPreview:test_trigger_only_tracker_never_renders_a_bar()
+    local trigger = make_tracker("find_weakness_backstab")
+    trigger.triggerOnly = true
+    local display = make_tracker("find_weakness")
+    -- Both share spellID; only display def should produce a bar
+    boot({ display, trigger }, false)
+    lu.assertEquals(1, #self._configureBarCalls)
+    lu.assertEquals("find_weakness", self._configureBarCalls[1].def.id)
+end
+
 -- Runner calls lu.LuaUnit.run() — do not call os.exit here

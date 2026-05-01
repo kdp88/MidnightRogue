@@ -78,6 +78,7 @@ function BarGroup:GetOrCreate(groupName, settings)
     frame._groupName = groupName
     frame._grow      = settings.grow or GROW.UP
     frame._width     = settings.width or 200
+    frame._height    = settings.height or 24
 
     -- Restore position
     local x = settings.x or 0
@@ -97,7 +98,7 @@ end
 -- Stack bars inside their group frame according to grow direction
 function BarGroup:LayoutBars(frame)
     local barCount = #frame._bars
-    local barHeight = 24
+    local barHeight = frame._height or 24
     local spacing = BAR_SPACING
     local totalHeight = barCount > 0 and (barCount * barHeight + (barCount - 1) * spacing) or 1
     frame:SetHeight(math.max(totalHeight, 1))
@@ -161,7 +162,6 @@ function BarGroup:SetLocked(locked)
     end
 end
 
--- Update group width (e.g. from config change)
 function BarGroup:SetWidth(groupName, width)
     local frame = groups[groupName]
     if not frame then return end
@@ -169,6 +169,13 @@ function BarGroup:SetWidth(groupName, width)
     for _, bar in ipairs(frame._bars) do
         MR.BarRenderer:SetWidth(bar, width)
     end
+end
+
+function BarGroup:SetHeight(groupName, height)
+    local frame = groups[groupName]
+    if not frame then return end
+    frame._height = height
+    BarGroup:LayoutBars(frame)
 end
 
 BarGroup.GROW = GROW

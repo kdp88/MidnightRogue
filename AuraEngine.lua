@@ -88,7 +88,6 @@ end
 
 -- Called by Core.lua on UNIT_SPELLCAST_SUCCEEDED for "player"
 function AuraEngine:OnSpellCast(spellID)
-    print("[MR] cast: " .. tostring(spellID))
     local defs = self._castMap[spellID]
     if not defs then return end
 

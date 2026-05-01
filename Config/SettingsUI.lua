@@ -21,6 +21,10 @@ local WIDTH_MIN  = 100
 local WIDTH_MAX  = 400
 local WIDTH_STEP = 10
 
+local HEIGHT_MIN  = 16
+local HEIGHT_MAX  = 64
+local HEIGHT_STEP = 4
+
 local GROUP_ORDER  = { "buffs", "procs", "debuffs" }
 local GROUP_LABELS = { buffs = "Buffs", procs = "Procs", debuffs = "Debuffs" }
 
@@ -252,6 +256,56 @@ local function CreateWidthStepper(parent, groupName)
     return row
 end
 
+-- Height stepper: [-] [value] [+]
+local function CreateHeightStepper(parent, groupName)
+    local row = CreateFrame("Frame", nil, parent)
+    row:SetHeight(ROW_H)
+
+    local label = row:CreateFontString(nil, "OVERLAY")
+    SetFont(label)
+    label:SetPoint("LEFT", INDENT, 0)
+    label:SetText("Height:")
+    label:SetTextColor(0.8, 0.8, 0.8, 1)
+
+    local plusBtn  = MakeButton(row, 20, 16, "+", 11)
+    plusBtn:SetPoint("RIGHT", row, "RIGHT", -8, 0)
+
+    local valueLabel = row:CreateFontString(nil, "OVERLAY")
+    SetFont(valueLabel)
+    valueLabel:SetSize(34, ROW_H)
+    valueLabel:SetPoint("RIGHT", plusBtn, "LEFT", -3, 0)
+    valueLabel:SetJustifyH("CENTER")
+    valueLabel:SetTextColor(1, 1, 1, 1)
+
+    local minusBtn = MakeButton(row, 20, 16, "-", 11)
+    minusBtn:SetPoint("RIGHT", valueLabel, "LEFT", -3, 0)
+
+    local function GetH()
+        local g = MR.db.profile.groups[groupName]
+        return (g and g.height) or 24
+    end
+
+    local function ApplyHeight(h)
+        h = math.max(HEIGHT_MIN, math.min(HEIGHT_MAX, h))
+        MR.db.profile.groups[groupName] = MR.db.profile.groups[groupName] or {}
+        MR.db.profile.groups[groupName].height = h
+        valueLabel:SetText(tostring(h))
+        MR.BarGroup:SetHeight(groupName, h)
+        MR:RefreshDisplay()
+    end
+
+    local function Refresh()
+        valueLabel:SetText(tostring(GetH()))
+    end
+
+    minusBtn:SetScript("OnClick", function() ApplyHeight(GetH() - HEIGHT_STEP) end)
+    plusBtn:SetScript("OnClick",  function() ApplyHeight(GetH() + HEIGHT_STEP) end)
+
+    row.Refresh = Refresh
+    Refresh()
+    return row
+end
+
 -- Tracker row: enable box + name + color swatch (separate clickable regions)
 local function CreateTrackerRow(parent, def)
     local id = def.id
@@ -403,8 +457,9 @@ local function BuildPane(parent, groupName, trackerDefs)
         end
     ))
 
-    -- Width stepper
+    -- Width and height steppers
     addRow(CreateWidthStepper(pane, groupName))
+    addRow(CreateHeightStepper(pane, groupName))
 
     addDivider()
 

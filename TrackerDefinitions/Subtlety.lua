@@ -281,18 +281,19 @@ MR.Trackers["Subtlety"] = {
         showStacks   = false,
     },
     {
-        id       = "find_weakness_backstab",
-        name     = "Find Weakness (Backstab)",
-        spellID  = 91021,
-        castID   = 53,
-        duration = 10,
-        auraType = "target_debuff",
-        group    = "debuffs",
-        priority = 57,
-        color    = { r = 0.5, g = 0.5, b = 0.5, a = 1.0 },
+        id          = "find_weakness_backstab",
+        name        = "Find Weakness (Backstab)",
+        spellID     = 91021,
+        castID      = 53,
+        duration    = 10,
+        auraType    = "target_debuff",
+        group       = "debuffs",
+        priority    = 57,
+        color       = { r = 0.5, g = 0.5, b = 0.5, a = 1.0 },
         showDuration = true,
         showStacks   = false,
-        optional     = true,  -- requires Improved Backstab (319949); off by default
+        optional     = true,   -- requires Improved Backstab (319949); off by default
+        triggerOnly  = true,   -- contributes to state[91021]; display handled by find_weakness
     },
     {
         id       = "echoing_reprimand",

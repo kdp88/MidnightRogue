@@ -32,11 +32,13 @@ local function MockFontString()
     local fs = MockTexture()
     fs._text  = ""
     fs._shown = true
-    fs.SetText = function(self, t) self._text = t end
-    fs.GetText = function(self) return self._text end
-    fs.Show    = function(self) self._shown = true end
-    fs.Hide    = function(self) self._shown = false end
-    fs.IsShown = function(self) return self._shown end
+    fs.SetText    = function(self, t) self._text = t end
+    fs.GetText    = function(self) return self._text end
+    fs.Show       = function(self) self._shown = true end
+    fs.Hide       = function(self) self._shown = false end
+    fs.IsShown    = function(self) return self._shown end
+    fs.SetFont    = function() end
+    fs.SetSize    = function() end
     return fs
 end
 

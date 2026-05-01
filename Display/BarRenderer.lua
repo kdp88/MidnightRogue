@@ -9,51 +9,49 @@ local addonName, MR = ...
 MR.BarRenderer = {}
 local BarRenderer = MR.BarRenderer
 
-local BAR_HEIGHT    = 24
-local ICON_SIZE     = 24
-local TEXT_PADDING  = 4
+local BAR_HEIGHT_DEFAULT = 24
+local TEXT_PADDING       = 4
+local BAR_FONT           = "Fonts\\FRIZQT__.TTF"
+
+local function FontSizeForHeight(h)
+    return math.max(8, math.floor(h * 0.46))
+end
 
 -- Frame pool — recycled to avoid garbage collection pressure
 local barPool = {}
 
 local function CreateBarFrame(parent)
     local bar = CreateFrame("Frame", nil, parent)
-    bar:SetHeight(BAR_HEIGHT)
+    bar:SetHeight(BAR_HEIGHT_DEFAULT)
 
-    -- Icon on the left
     bar.icon = bar:CreateTexture(nil, "ARTWORK")
-    bar.icon:SetSize(ICON_SIZE, ICON_SIZE)
+    bar.icon:SetSize(BAR_HEIGHT_DEFAULT, BAR_HEIGHT_DEFAULT)
     bar.icon:SetPoint("LEFT", bar, "LEFT", 0, 0)
-    -- Trim default Blizzard icon border
     bar.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
 
-    -- Status bar fills from left to right
     bar.statusbar = CreateFrame("StatusBar", nil, bar)
     bar.statusbar:SetPoint("LEFT", bar.icon, "RIGHT", 2, 0)
     bar.statusbar:SetPoint("RIGHT", bar, "RIGHT", 0, 0)
-    bar.statusbar:SetHeight(BAR_HEIGHT)
+    bar.statusbar:SetHeight(BAR_HEIGHT_DEFAULT)
     bar.statusbar:SetMinMaxValues(0, 1)
     bar.statusbar:SetValue(1)
 
-    -- Bar background (slightly darker tint of bar color)
     bar.bg = bar.statusbar:CreateTexture(nil, "BACKGROUND")
     bar.bg:SetAllPoints(bar.statusbar)
     bar.bg:SetColorTexture(0, 0, 0, 0.5)
 
-    -- Ability name (left of statusbar)
-    bar.nameText = bar.statusbar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    bar.nameText = bar.statusbar:CreateFontString(nil, "OVERLAY")
     bar.nameText:SetPoint("LEFT", bar.statusbar, "LEFT", TEXT_PADDING, 0)
     bar.nameText:SetJustifyH("LEFT")
     bar.nameText:SetTextColor(1, 1, 1, 1)
 
-    -- Duration remaining (right of statusbar)
-    bar.timeText = bar.statusbar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    bar.timeText = bar.statusbar:CreateFontString(nil, "OVERLAY")
     bar.timeText:SetPoint("RIGHT", bar.statusbar, "RIGHT", -TEXT_PADDING, 0)
     bar.timeText:SetJustifyH("RIGHT")
     bar.timeText:SetTextColor(1, 1, 1, 1)
 
-    -- Stack count overlaid on icon — must parent to bar (Frame), not bar.icon (Texture)
-    bar.stackText = bar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    -- Stack count overlaid on icon (parented to bar Frame, not Texture)
+    bar.stackText = bar:CreateFontString(nil, "OVERLAY")
     bar.stackText:SetPoint("BOTTOMRIGHT", bar.icon, "BOTTOMRIGHT", 0, 0)
     bar.stackText:SetTextColor(1, 1, 0, 1)
 
@@ -92,8 +90,19 @@ end
 -- trackerDef: entry from TrackerDefinitions/Subtlety.lua
 -- auraData:   result from AuraEngine:GetPlayerBuff / GetTargetDebuff
 -- settings:   per-tracker user settings from saved variables
-function BarRenderer:ConfigureBar(bar, trackerDef, auraData, settings)
+-- barHeight:  pixel height for this bar (from group settings); nil = default
+function BarRenderer:ConfigureBar(bar, trackerDef, auraData, settings, barHeight)
     local cfg = settings or {}
+    local h   = barHeight or BAR_HEIGHT_DEFAULT
+    local fs  = FontSizeForHeight(h)
+
+    -- Height and font size applied every configure so pooled bars resize correctly
+    bar:SetHeight(h)
+    bar.icon:SetSize(h, h)
+    bar.statusbar:SetHeight(h)
+    bar.nameText:SetFont(BAR_FONT, fs)
+    bar.timeText:SetFont(BAR_FONT, fs)
+    bar.stackText:SetFont(BAR_FONT, math.max(8, fs - 2))
 
     -- Icon: use user override if set, otherwise pull from spell data
     local iconID = cfg.iconOverride or MR.AuraEngine:GetSpellIcon(trackerDef.spellID)

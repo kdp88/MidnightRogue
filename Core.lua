@@ -113,6 +113,7 @@ function MR:RefreshDisplay()
     local unlocked  = MR.db.profile.locked == false
 
     for _, trackerDef in ipairs(activeTracker) do
+        if not trackerDef.triggerOnly then
         local groupName = trackerDef.group
         local groupEnabled = not groupCfg[groupName] or groupCfg[groupName].enabled
         if groupEnabled then
@@ -133,11 +134,13 @@ function MR:RefreshDisplay()
                 if auraData and auraData.isActive then
                     local groupFrame = MR.BarGroup:GetOrCreate(groupName, groupCfg[groupName] or {})
                     local bar = MR.BarRenderer:AcquireBar(groupFrame)
-                    MR.BarRenderer:ConfigureBar(bar, trackerDef, auraData, trackerSettings)
+                    local barH = groupCfg[groupName] and groupCfg[groupName].height or 24
+                    MR.BarRenderer:ConfigureBar(bar, trackerDef, auraData, trackerSettings, barH)
                     MR.BarGroup:AddBar(groupName, bar, trackerDef.priority)
                 end
             end
         end
+        end  -- triggerOnly guard
     end
 end
 
