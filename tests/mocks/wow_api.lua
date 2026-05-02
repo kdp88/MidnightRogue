@@ -168,6 +168,19 @@ do
     end
 end
 
+-- C_UnitAuras stub — tests override GetAuraDataByIndex to simulate aura state
+_G.C_UnitAuras = {
+    GetAuraDataByIndex = function(unit, index, filter)
+        return nil  -- empty by default; override per-test
+    end,
+    GetAuraDataByAuraInstanceID = function(unit, instanceID)
+        return nil  -- override per-test
+    end,
+}
+
+-- WoW string extensions
+string.trim = function(s) return (s:gsub("^%s*(.-)%s*$", "%1")) end
+
 -- Shared globals the addon references
 _G.math  = math
 _G.table = table

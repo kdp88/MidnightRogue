@@ -4,10 +4,11 @@
 
     Event flow:
       ADDON_LOADED               → init DB, detect spec, load tracker, build config
-      PLAYER_ENTERING_WORLD      → reset aura state, full refresh
-      UNIT_SPELLCAST_SUCCEEDED   → player cast detected, update aura state
-      PLAYER_TARGET_CHANGED      → refresh display
-      PLAYER_FOCUS_CHANGED       → refresh display
+      PLAYER_ENTERING_WORLD      → reset aura state, full scan, refresh
+      UNIT_AURA                  → live aura add/update/remove via C_UnitAuras (primary)
+      UNIT_SPELLCAST_SUCCEEDED   → fallback for spells that produce no aura
+      PLAYER_TARGET_CHANGED      → full aura rescan on target, refresh display
+      PLAYER_FOCUS_CHANGED       → full aura rescan on focus, refresh display
       PLAYER_REGEN_DISABLED      → entered combat, refresh display
       PLAYER_REGEN_ENABLED       → left combat, reset all aura state
 --]]
@@ -55,6 +56,7 @@ end
 
 function addon:OnEnable()
     self:RegisterEvent("PLAYER_ENTERING_WORLD")
+    self:RegisterEvent("UNIT_AURA")
     self:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
     self:RegisterEvent("PLAYER_TARGET_CHANGED")
     self:RegisterEvent("PLAYER_FOCUS_CHANGED")
@@ -69,22 +71,34 @@ end
 function addon:PLAYER_ENTERING_WORLD()
     InitTracker()
     MR.AuraEngine:Reset()
+    MR.AuraEngine:OnUnitAura("player", nil)
+    MR.AuraEngine:OnUnitAura("target", nil)
+    MR.AuraEngine:OnUnitAura("focus",  nil)
+    MR:RefreshDisplay()
+end
+
+function addon:UNIT_AURA(_, unit, updateInfo)
+    if unit ~= "player" and unit ~= "target" and unit ~= "focus" then return end
+    MR.AuraEngine:OnUnitAura(unit, updateInfo)
     MR:RefreshDisplay()
 end
 
 function addon:UNIT_SPELLCAST_SUCCEEDED(_, unitID, _, spellID)
     if unitID ~= "player" then return end
+    if MR._probe2Active then
+        self:Print("CAST spellID=" .. tostring(spellID))
+    end
     MR.AuraEngine:OnSpellCast(spellID)
     MR:RefreshDisplay()
 end
 
 function addon:PLAYER_TARGET_CHANGED()
-    MR.AuraEngine:ClearUnitDebuffs("target_debuff")
+    MR.AuraEngine:OnUnitAura("target", nil)
     MR:RefreshDisplay()
 end
 
 function addon:PLAYER_FOCUS_CHANGED()
-    MR.AuraEngine:ClearUnitDebuffs("focus_debuff")
+    MR.AuraEngine:OnUnitAura("focus", nil)
     MR:RefreshDisplay()
 end
 
@@ -175,6 +189,80 @@ function addon:OnChatCommand(input)
             mapCount = mapCount + 1
         end
         if mapCount == 0 then self:Print("  (empty — BuildCastMap may not have run)") end
+    elseif cmd == "probe" then
+        self:Print("=== API Probe ===")
+
+        local function try(label, fn)
+            local ok, result = pcall(fn)
+            if ok then
+                local ok2 = pcall(function()
+                    self:Print(string.format("  [OK] %s = %s", label, tostring(result)))
+                end)
+                if not ok2 then
+                    self:Print("  [OK] " .. label .. " = <secret value>")
+                end
+            else
+                self:Print("  [BLOCKED] " .. label)
+            end
+        end
+
+        -- All known power types
+        self:Print("-- Power types --")
+        if Enum and Enum.PowerType then
+            for name, id in pairs(Enum.PowerType) do
+                try("PowerType." .. name .. " UnitPower", function()
+                    return UnitPower("player", id)
+                end)
+                try("PowerType." .. name .. " UnitPowerMax", function()
+                    return UnitPowerMax("player", id)
+                end)
+            end
+        else
+            self:Print("  [BLOCKED] Enum.PowerType")
+        end
+
+        -- Shadow Techniques specific queries
+        self:Print("-- Shadow Techniques (196912) --")
+        try("UnitBuff legacy", function()
+            return UnitBuff("player", 196912) or "nil"
+        end)
+        try("UnitAura legacy", function()
+            return UnitAura("player", 196912) or "nil"
+        end)
+        try("C_UnitAuras.GetPlayerAuraBySpellID", function()
+            local data = C_UnitAuras.GetPlayerAuraBySpellID(196912)
+            return data and "returned table" or "nil"
+        end)
+        try("GetSpellCount 196912", function()
+            return GetSpellCount(196912)
+        end)
+        try("AuraUtil.ForEachAura (count)", function()
+            local count = 0
+            AuraUtil.ForEachAura("player", "HELPFUL", nil, function(a)
+                count = count + 1
+            end)
+            return count
+        end)
+
+        -- Auto-attack detection
+        self:Print("-- Auto-attack --")
+        try("GetSpellInfo 6603 (Attack)", function()
+            if C_Spell and C_Spell.GetSpellInfo then
+                local info = C_Spell.GetSpellInfo(6603)
+                return info and info.name or "nil"
+            end
+            return GetSpellInfo(6603) or "nil"
+        end)
+
+        self:Print("=== End Probe (use /mr probe2 to log all spell casts) ===")
+
+    elseif cmd == "probe2" then
+        MR._probe2Active = not MR._probe2Active
+        if MR._probe2Active then
+            self:Print("Spell cast logging ON — cast spells and check chat. /mr probe2 to stop.")
+        else
+            self:Print("Spell cast logging OFF.")
+        end
     else
         MR.SettingsUI:Open()
     end

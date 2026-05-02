@@ -59,7 +59,7 @@ The swatch always reflects the current effective color — either your saved ove
 
 ### Find Weakness (Backstab)
 
-The **Find Weakness (Backstab)** tracker (`find_weakness_backstab`) is **disabled by default**. It tracks the Find Weakness debuff applied by Backstab, which requires the Improved Backstab talent. Enable it in the Debuffs tab if you have that talent.
+The **Find Weakness (Backstab)** tracker (`find_weakness_backstab`) is **disabled by default**. It tracks the Find Weakness debuff applied by Backstab, which requires the Improved Backstab talent. Enable it in the Debuffs tab if you have that talent. Beacause we can no longer access certain APIs, we can never tell if rogue is behind target, use with caution.
 
 When enabled, Backstab casts contribute to the Find Weakness bar alongside Cheap Shot and Shadowstrike. Only one bar is shown — `find_weakness_backstab` is a state contributor only and never renders its own bar.
 
@@ -70,17 +70,6 @@ When enabled, Backstab casts contribute to the Find Weakness bar alongside Cheap
 | `/mr` | Open configuration panel |
 | `/mr reset` | Reset all bar positions to defaults |
 | `/reload` | Reload UI (required after spec change) |
-
-## API Verification Required (Midnight)
-
-> **All spell IDs and API calls in this addon are based on Dragonflight (11.x) data.**
-> When Midnight PTR or live access becomes available, verify the following before shipping:
->
-> - `.toc` interface number (currently set to `120000` as placeholder)
-> - All spell IDs in `TrackerDefinitions/Subtlety.lua`
-> - `C_Spell.GetSpellInfo()` availability and return shape
-> - `C_UnitAuras` API surface (function names and return values)
-> - `GetSpecializationInfo()` return values for rogue specs
 
 ## Architecture
 

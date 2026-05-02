@@ -153,4 +153,180 @@ function TestRefreshDisplayPreview:test_trigger_only_tracker_never_renders_a_bar
     lu.assertEquals("find_weakness", self._configureBarCalls[1].def.id)
 end
 
+-- ─── OnChatCommand: probe ────────────────────────────────────────────────────
+
+TestChatCommandProbe = {}
+
+function TestChatCommandProbe:setUp()
+    self._printed = {}
+    MR.addon.Print = function(_, msg) table.insert(self._printed, msg) end
+    MR.SettingsUI  = MR.SettingsUI or { Open = function() end }
+
+    -- Minimal API surface the probe exercises
+    _G.UnitPower    = function(unit, powerType) return 3 end
+    _G.UnitPowerMax = function(unit, powerType) return 5 end
+    _G.Enum         = { PowerType = { ComboPoints = 4, Energy = 3 } }
+    _G.UnitBuff     = function() return nil end
+end
+
+function TestChatCommandProbe:tearDown()
+    _G.UnitPower    = nil
+    _G.UnitPowerMax = nil
+    _G.Enum         = nil
+    _G.UnitBuff     = nil
+end
+
+function TestChatCommandProbe:test_probe_does_not_error()
+    local ok, err = pcall(function() MR.addon:OnChatCommand("probe") end)
+    lu.assertTrue(ok, "probe command should not throw: " .. tostring(err))
+end
+
+function TestChatCommandProbe:test_probe_prints_output()
+    MR.addon:OnChatCommand("probe")
+    lu.assertTrue(#self._printed > 0, "probe should print at least one line")
+end
+
+function TestChatCommandProbe:test_probe_survives_missing_apis()
+    _G.UnitPower    = nil
+    _G.UnitPowerMax = nil
+    _G.Enum         = nil
+    _G.UnitBuff     = nil
+    local ok, err = pcall(function() MR.addon:OnChatCommand("probe") end)
+    lu.assertTrue(ok, "probe should handle missing APIs gracefully: " .. tostring(err))
+end
+
+function TestChatCommandProbe:test_probe_survives_secret_return_value()
+    -- Simulate a Midnight "secret" value that errors on tostring
+    _G.UnitPower = function() return setmetatable({}, {
+        __tostring = function() error("invalid value (secret)") end
+    }) end
+    local ok, err = pcall(function() MR.addon:OnChatCommand("probe") end)
+    lu.assertTrue(ok, "probe should handle secret tostring: " .. tostring(err))
+end
+
+function TestChatCommandProbe:test_probe_survives_secret_string_in_format()
+    -- Simulate tostring succeeding but returning a secret string that errors in string.format
+    local secretStr = setmetatable({}, {
+        __tostring = function() return setmetatable({}, {
+            __concat = function() error("invalid value (secret) at index 2 in table for 'concat'") end,
+        }) end
+    })
+    _G.UnitPower = function() return secretStr end
+    local ok, err = pcall(function() MR.addon:OnChatCommand("probe") end)
+    lu.assertTrue(ok, "probe should handle secret string in format: " .. tostring(err))
+end
+
+function TestChatCommandProbe:test_probe_reports_unit_power()
+    MR.addon:OnChatCommand("probe")
+    local found = false
+    for _, line in ipairs(self._printed) do
+        if line:find("ComboPoints") or line:find("combo") or line:find("power") then
+            found = true; break
+        end
+    end
+    lu.assertTrue(found, "probe should report combo point / power info")
+end
+
+function TestChatCommandProbe:test_probe_covers_all_power_types()
+    _G.Enum = { PowerType = { ComboPoints = 4, Energy = 3, Mana = 0, Rage = 1, Focus = 2 } }
+    MR.addon:OnChatCommand("probe")
+    local found = false
+    for _, line in ipairs(self._printed) do
+        if line:find("PowerType") then found = true; break end
+    end
+    lu.assertTrue(found, "probe should iterate power types")
+end
+
+function TestChatCommandProbe:test_probe_tests_get_spell_count()
+    _G.GetSpellCount = function(id) return 0 end
+    MR.addon:OnChatCommand("probe")
+    local found = false
+    for _, line in ipairs(self._printed) do
+        if line:find("SpellCount") or line:find("196912") then found = true; break end
+    end
+    lu.assertTrue(found, "probe should test GetSpellCount for Shadow Techniques")
+end
+
+function TestChatCommandProbe:test_probe_tests_unit_aura_legacy()
+    _G.UnitAura = function() return nil end
+    MR.addon:OnChatCommand("probe")
+    local found = false
+    for _, line in ipairs(self._printed) do
+        if line:find("UnitAura") then found = true; break end
+    end
+    lu.assertTrue(found, "probe should test UnitAura legacy API")
+end
+
+-- ─── /mr probe2 ──────────────────────────────────────────────────────────────
+
+TestChatCommandProbe2 = {}
+
+function TestChatCommandProbe2:setUp()
+    self._printed = {}
+    MR.addon.Print = function(_, msg) table.insert(self._printed, msg) end
+    MR.SettingsUI  = MR.SettingsUI or { Open = function() end }
+    MR._probe2Active = false
+end
+
+function TestChatCommandProbe2:tearDown()
+    MR._probe2Active = false
+end
+
+function TestChatCommandProbe2:test_probe2_does_not_error()
+    local ok, err = pcall(function() MR.addon:OnChatCommand("probe2") end)
+    lu.assertTrue(ok, "probe2 should not throw: " .. tostring(err))
+end
+
+function TestChatCommandProbe2:test_probe2_enables_logging()
+    MR.addon:OnChatCommand("probe2")
+    lu.assertTrue(MR._probe2Active)
+end
+
+function TestChatCommandProbe2:test_probe2_toggles_off()
+    MR._probe2Active = true
+    MR.addon:OnChatCommand("probe2")
+    lu.assertFalse(MR._probe2Active)
+end
+
+function TestChatCommandProbe2:test_probe2_prints_status_on()
+    MR.addon:OnChatCommand("probe2")
+    local found = false
+    for _, line in ipairs(self._printed) do
+        if line:find("ON") or line:find("on") or line:find("enabled") then found = true; break end
+    end
+    lu.assertTrue(found, "probe2 should print enabled status")
+end
+
+function TestChatCommandProbe2:test_probe2_prints_status_off()
+    MR._probe2Active = true
+    MR.addon:OnChatCommand("probe2")
+    local found = false
+    for _, line in ipairs(self._printed) do
+        if line:find("OFF") or line:find("off") or line:find("disabled") then found = true; break end
+    end
+    lu.assertTrue(found, "probe2 should print disabled status")
+end
+
+function TestChatCommandProbe2:test_spell_cast_logs_when_probe2_active()
+    MR._probe2Active = true
+    MR.AuraEngine:BuildCastMap({})
+    MR.addon:UNIT_SPELLCAST_SUCCEEDED(nil, "player", nil, 6603)
+    local found = false
+    for _, line in ipairs(self._printed) do
+        if line:find("6603") then found = true; break end
+    end
+    lu.assertTrue(found, "active probe2 should log spell ID to chat")
+end
+
+function TestChatCommandProbe2:test_spell_cast_does_not_log_when_probe2_inactive()
+    MR._probe2Active = false
+    MR.AuraEngine:BuildCastMap({})
+    MR.addon:UNIT_SPELLCAST_SUCCEEDED(nil, "player", nil, 6603)
+    local found = false
+    for _, line in ipairs(self._printed) do
+        if line:find("6603") then found = true; break end
+    end
+    lu.assertFalse(found, "inactive probe2 should not log spell IDs")
+end
+
 -- Runner calls lu.LuaUnit.run() — do not call os.exit here
